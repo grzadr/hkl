@@ -1,0 +1,3 @@
+[submodule "agizmo"]
+	path = agizmo
+	url = ../agizmo.git
