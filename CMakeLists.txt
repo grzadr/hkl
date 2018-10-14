@@ -1,53 +1,45 @@
 cmake_minimum_required(VERSION 3.1)
-project(HKL)
+project(pyHKL VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-march=x86-64 -mtune=native -O3 -g0 -pipe -fPIE -fPIC \
--fstack-protector-strong -fno-plt -fvisibility=hidden -Werror -Wall -pthread")
-set(INSTALL_TARGET "/home/adrian")
-set(PYBIND11_CPP_STANDARD -std=c++1z)
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "/usr/lib/python3.6" CACHE PATH "..." FORCE)
+endif()
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
-
-# set(CMAKE_AUTOMOC ON)
-# find_package(Qt5Core REQUIRED)
-# find_package(Qt5Sql REQUIRED)
-# include_directories(${Qt5Core_INCLUDES})
-# add_library(DOGIToys lib/dogitoys.cpp lib/dogitoys-populate.cpp)
-# target_link_libraries(DOGIToys Qt5::Core Qt5::Sql)
-
-# include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test)
-# add_executable(Verify main.cpp
-    # test/test.cpp
-    # test/test_comtol.cpp
-    # test/test_region.cpp
-    # test/test_dogitoys.cpp
-    # benchmark/bench_comtol.cpp
-# )
-# target_link_libraries(Verify DOGIToys)
-file(GLOB HeaderFiles ${CMAKE_CURRENT_SOURCE_DIR}/lib/*.h)
-# install(TARGETS DOGIToys ARCHIVE DESTINATION ${INSTALL_TARGET}/lib)
-install(FILES ${HeaderFiles} DESTINATION ${INSTALL_TARGET}/lib/hkl)
+if (NOT HEADER_INSTALL_PREFIX)
+    set(HEADER_INSTALL_PREFIX "/usr/local" CACHE PATH "..." FORCE)
+endif()
 
 add_subdirectory(agizmo/pybind11)
+pybind11_add_module(pyHKL src/pyhkl.cpp)
+target_include_directories(pyHKL
+    PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
+)
+target_compile_options(pyHKL PRIVATE -march=x86-64 -mtune=native -O3 -g0
+                       -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
+                       -fvisibility=hidden -Werror -Wall -pthread)
+target_compile_features(pyHKL PRIVATE cxx_std_17)
+install(TARGETS pyHKL LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)
 
-pybind11_add_module(pyComTol pycomtol.cpp)
-pybind11_add_module(pyHKL pyhkl.cpp)
-# target_link_libraries(pyHKL PRIVATE DOGIToys)
+include(CTest)
 
+add_executable(TestHKL test/src/test_hkl.cpp)
+target_include_directories(TestHKL
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
+)
+target_compile_features(TestHKL PRIVATE cxx_std_17)
+# target_compile_options(BasicTest PRIVATE -g -march=x86-64 -mtune=native -O3 -g0
+# 				       -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
+# 				       -fvisibility=hidden -Werror -Wall -pthread)
 
-
-install(TARGETS pyHKL LIBRARY DESTINATION ${INSTALL_TARGET}/lib)
-install(TARGETS pyComTol LIBRARY DESTINATION ${INSTALL_TARGET}/lib)
-
-# install(TARGETS pyHKL LIBRARY DESTINATION ${INSTALL_TARGET}/lib)
-# install(TARGETS pyComTol LIBRARY DESTINATION ${INSTALL_TARGET}/lib)
-# install(TARGETS pyStrTol LIBRARY DESTINATION ${INSTALL_TARGET}/lib)
-
-
-# include(CTest)
-# add_test(Complete Verify)
+add_test(Test TestHKL)
