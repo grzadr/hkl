@@ -33,7 +33,7 @@ file(GLOB HeaderFiles ${CMAKE_CURRENT_SOURCE_DIR}/lib/*.h)
 # install(TARGETS DOGIToys ARCHIVE DESTINATION ${INSTALL_TARGET}/lib)
 install(FILES ${HeaderFiles} DESTINATION ${INSTALL_TARGET}/lib/hkl)
 
-add_subdirectory(pybind11)
+add_subdirectory(agizmo/pybind11)
 
 pybind11_add_module(pyComTol pycomtol.cpp)
 pybind11_add_module(pyHKL pyhkl.cpp)
