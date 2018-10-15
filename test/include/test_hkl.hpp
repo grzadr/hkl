@@ -1,8 +1,13 @@
 #pragma once
 
 #include "agizmo/evaluation.hpp"
+#include "test_region.hpp"
 
 using namespace AGizmo::Evaluation;
+
+namespace TestHKL {
+int perform_tests(bool verbose);
+}
 
 //#include "lib/comtol.h"
 //#include "lib/dogitoys.h"
@@ -20,27 +25,27 @@ using namespace AGizmo::Evaluation;
 //#include <tuple>
 //#include <vector>
 
-//using namespace std::string_literals;
-//using namespace HKL;
-//using namespace ComTol;
-//using namespace ComTol::StrTol;
+// using namespace std::string_literals;
+// using namespace HKL;
+// using namespace ComTol;
+// using namespace ComTol::StrTol;
 
-//using std::cout;
-//using std::endl;
-//using std::pair;
-//using std::size_t;
-//using std::string;
-//using std::to_string;
-//using std::tuple;
-//using std::vector;
+// using std::cout;
+// using std::endl;
+// using std::pair;
+// using std::size_t;
+// using std::string;
+// using std::to_string;
+// using std::tuple;
+// using std::vector;
 
-//using sstream = std::stringstream;
-//using pair_int = pair<int, int>;
-//using pair_str = pair<string, string>;
+// using sstream = std::stringstream;
+// using pair_int = pair<int, int>;
+// using pair_str = pair<string, string>;
 
-//namespace General {
+// namespace General {
 
-//struct Stats {
+// struct Stats {
 //  int total{0}, failed{0};
 
 //  Stats &operator++() {
@@ -74,20 +79,20 @@ using namespace AGizmo::Evaluation;
 //  }
 //};
 
-//inline bool update_stats(const pair<int, int> &result, int &total,
+// inline bool update_stats(const pair<int, int> &result, int &total,
 //                         int &failed) {
 //  total += result.first;
 //  failed += result.second;
 //  return failed;
 //}
 
-//const string passed_str("[ PASSED ]");
-//const string failed_str("[~FAILED~]");
+// const string passed_str("[ PASSED ]");
+// const string failed_str("[~FAILED~]");
 
-//string gen_framed(const string &message, size_t width = 80, char frame = '#');
-//string gen_pretty(const string &message, size_t width = 80);
-//string gen_summary(int total, int failed, string type = "Evaluation");
-//inline string gen_summary(const Stats &stats, string type = "Evaluation") {
+// string gen_framed(const string &message, size_t width = 80, char frame =
+// '#'); string gen_pretty(const string &message, size_t width = 80); string
+// gen_summary(int total, int failed, string type = "Evaluation"); inline string
+// gen_summary(const Stats &stats, string type = "Evaluation") {
 //  sstream message;
 
 //  message << type;
@@ -100,13 +105,13 @@ using namespace AGizmo::Evaluation;
 
 //  return message.str();
 //}
-//int perform_tests(bool verbose = false);
+// int perform_tests(bool verbose = false);
 //} // namespace General
 
-//namespace EvalComTol {
+// namespace EvalComTol {
 
-//template <typename It>
-//inline pair_int test_XOR(It begin, It end, sstream &message) {
+// template <typename It>
+// inline pair_int test_XOR(It begin, It end, sstream &message) {
 //  int total = 0, failed = 0;
 
 //  for (; begin != end; ++begin) {
@@ -128,12 +133,12 @@ using namespace AGizmo::Evaluation;
 //  return {total, failed};
 //}
 
-//pair_int eval_comtol(bool verbose = false);
+// pair_int eval_comtol(bool verbose = false);
 //} // namespace EvalComTol
 
-//namespace EvalRegion {
+// namespace EvalRegion {
 
-//template <typename T> string ntos(const optional<T> &result) {
+// template <typename T> string ntos(const optional<T> &result) {
 //  if constexpr (std::is_same_v<Region, T>)
 //    if (result.has_value())
 //      return result.value().str();
@@ -153,65 +158,69 @@ using namespace AGizmo::Evaluation;
 //}
 
 //// BASIC EVALUATION
-//pair_int check_basic(bool verbose = false);
+// pair_int check_basic(bool verbose = false);
 //// CONSTRUCTOR AND EXCEPTION EVALUATION
-//pair_int check_constructors(bool verbose = false);
+// pair_int check_constructors(bool verbose = false);
 //// FUNCTIONS EVALUATION
-//pair_int check_functions(bool verbose = false);
+// pair_int check_functions(bool verbose = false);
 //// BASIC OPERATIONS
-//pair_int check_operations(bool verbose = false);
+// pair_int check_operations(bool verbose = false);
 //// BENCHMARK
-//pair_int benchmark_region(size_t base = 1000, bool verbose = true);
+// pair_int benchmark_region(size_t base = 1000, bool verbose = true);
 //// Wrapper function
-//pair_int eval_region(bool verbose = false);
+// pair_int eval_region(bool verbose = false);
 //} // namespace EvalRegion
 
-//namespace EvalRegionSet {
-//pair_int basic_check(bool verbose = false);
-//pair_int count_check();
+// namespace EvalRegionSet {
+// pair_int basic_check(bool verbose = false);
+// pair_int count_check();
 //} // namespace EvalRegionSet
 
-//namespace EvalRegionSeq {
-//using General::Stats;
-//Stats check_basic(bool verbose = false);
-//Stats check_get_seq(bool verbose = false);
-//Stats check_read_fasta(bool verbose = false);
+// namespace EvalRegionSeq {
+// using General::Stats;
+// Stats check_basic(bool verbose = false);
+// Stats check_get_seq(bool verbose = false);
+// Stats check_read_fasta(bool verbose = false);
 
-//Stats eval_regionseq(bool verbose = false);
+// Stats eval_regionseq(bool verbose = false);
 //} // namespace EvalRegionSeq
 
-//namespace EvalSeq {
-//pair_int basic_check();
-//void test();
+// namespace EvalSeq {
+// pair_int basic_check();
+// void test();
 //} // namespace EvalSeq
 
-//namespace EvalDOGIToys {
-//using General::Stats;
-//Stats check_gff3_str_escape(bool verbose);
-//Stats check_gff3_str_clean(bool verbose);
-//Stats check_DOGI_basic(QString db_name, bool verbose);
-//Stats check_DOGI_populate(QString db_name, QString config_file, bool verbose);
-//Stats check_DOGI_hpa_expression(const QString &db_name,
+// namespace EvalDOGIToys {
+// using General::Stats;
+// Stats check_gff3_str_escape(bool verbose);
+// Stats check_gff3_str_clean(bool verbose);
+// Stats check_DOGI_basic(QString db_name, bool verbose);
+// Stats check_DOGI_populate(QString db_name, QString config_file, bool
+// verbose); Stats check_DOGI_hpa_expression(const QString &db_name,
 //                                const QString expression, bool verbose);
-//Stats check_Dogi_mapper_uniprot(const QString &db_name, const QString file_name,
+// Stats check_Dogi_mapper_uniprot(const QString &db_name, const QString
+// file_name,
 //                                bool verbose);
-//Stats check_DOGI_go_terms(const QString &db_name, const QString file_name,
+// Stats check_DOGI_go_terms(const QString &db_name, const QString file_name,
 //                          bool verbose);
-//Stats check_DOGI_go_annotations(const QString &db_name, const QString file_name,
+// Stats check_DOGI_go_annotations(const QString &db_name, const QString
+// file_name,
 //                                bool verbose);
 
-//Stats check_DOGI_gene_ontology(const QString &db_name, const QString go_terms,
+// Stats check_DOGI_gene_ontology(const QString &db_name, const QString
+// go_terms,
 //                               const QString &annotations, bool verbose);
-//Stats check_DOGI_mapper(const QString &db_name, const QString &database_from,
+// Stats check_DOGI_mapper(const QString &db_name, const QString &database_from,
 //                        const QString &database_to, const QString &file_name,
 //                        bool verbose);
-//Stats check_DOGI_genome(const QString &db_name, const QString &id_database,
+// Stats check_DOGI_genome(const QString &db_name, const QString &id_database,
 //                        const QString &masking, const QString &file_name,
 //                        bool verbose);
-//Stats check_DOGI_GVF(const QString &db_name, const QString &id_database,
+// Stats check_DOGI_GVF(const QString &db_name, const QString &id_database,
 //                     const QString &file_name, bool verbose);
-//Stats check_DOGI_Regulatory(const QString &db_name, const QString &id_database,
+// Stats check_DOGI_Regulatory(const QString &db_name, const QString
+// &id_database,
 //                            const QString &file_name, bool verbose);
 
-//Stats eval_dogitoys(bool verbose = false);
+// Stats eval_dogitoys(bool verbose = false);
 //} // namespace EvalDOGIToys

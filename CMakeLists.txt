@@ -30,7 +30,7 @@ install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)
 
 include(CTest)
 
-add_executable(TestHKL test/src/test_hkl.cpp)
+add_executable(TestHKL test/src/test_hkl.cpp test/src/test_region.cpp)
 target_include_directories(TestHKL
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include

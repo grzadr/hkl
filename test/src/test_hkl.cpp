@@ -1,6 +1,6 @@
 #include "test_hkl.hpp"
 
-int perform_tests(bool verbose) {
+int TestHKL::perform_tests(bool verbose) {
   Stats result;
 
   for (int i = 0; i < 2; ++i) {
@@ -9,10 +9,12 @@ int perform_tests(bool verbose) {
 
     cout << gen_framed("Evaluating HKL") << "\n";
 
+    result(TestRegion::check_region_constructors(verbose));
+
     cout << "\n" << gen_summary(result, "Evaluation", true) << "\n";
   }
 
   return result.getFailed();
 }
 
-int main() { return perform_tests(true); }
+int main() { return TestHKL::perform_tests(true); }
