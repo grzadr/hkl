@@ -43,3 +43,5 @@ target_compile_features(TestHKL PRIVATE cxx_std_17)
 # 				       -fvisibility=hidden -Werror -Wall -pthread)
 
 add_test(Test TestHKL)
+set_tests_properties(Test PROPERTIES WORKING_DIRECTORY
+  ${CMAKE_CURRENT_SOURCE_DIR}/test)

@@ -590,6 +590,106 @@ Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
   return result;
 }
 
+AGizmo::Evaluation::Stats
+TestHKL::TestRegion::check_region_formation(bool verbose) {
+  Stats result;
+
+  sstream message;
+
+  const auto &test_name = "HKL::Region Formation"s;
+
+  message << "\n~~~ Checking " << test_name << "\n";
+
+  message << "\n>>> Constructing tests\n";
+
+  ifstream input;
+  string line;
+
+  Files::open_file("test/input/formation.tsv", input);
+
+  string header;
+  getline(input, header);
+
+  auto header_splitted = StringDecompose::str_split(header, "\t");
+
+  vector<string> functions{};
+  std::copy(next(header_splitted.begin(), 6), header_splitted.end(),
+            back_inserter(functions));
+
+  vector<RegionFormation> formation_tests{};
+
+  while (getline(input, line)) {
+    const auto splitted = StringDecompose::str_split(line, "\t");
+    auto id = stoi(splitted[0]);
+    auto args =
+        InputRegionArgs(splitted[1], splitted[2], splitted[3], splitted[4]);
+    InputSingleRegionEval first_input{id, args, ""s};
+    formation_tests.emplace_back(first_input, splitted[5]);
+    for (size_t i = 0; i < functions.size(); ++i)
+      formation_tests.emplace_back(
+          InputSingleRegionEval{id, args, functions[i]}, splitted[i + 6]);
+    //    break;
+  }
+
+  message << ">>> Constructed " << formation_tests.size() << " tests\n";
+
+  message << "\n>>> Testing:\n";
+
+  Evaluator eval(test_name, formation_tests);
+
+  result(eval.verify(message));
+
+  message << "\n";
+
+  if (result.hasFailed() || verbose)
+    cout << message.str();
+
+  cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
+
+  return result;
+}
+
+AGizmo::Evaluation::Stats
+TestHKL::TestRegion::check_region_failure(bool verbose) {
+  Stats result;
+
+  sstream message;
+
+  const auto &test_name = "HKL::Region Failure"s;
+
+  message << "\n~~~ Checking " << test_name << "\n";
+
+  message << "\n>>> Constructing tests\n";
+
+  ifstream input;
+  string line;
+
+  Files::open_file("test/input/failure.tsv", input);
+  getline(input, line);
+
+  vector<RegionFailure> failure_tests{};
+
+  while (getline(input, line)) {
+    const auto splitted = StringDecompose::str_split(line, "\t");
+    failure_tests.emplace_back(
+        InputRegionArgs(splitted[1], splitted[2], splitted[3], splitted[4]),
+        splitted[5]);
+    //    break;
+  }
+  Evaluator eval(test_name, failure_tests);
+
+  result(eval.verify(message));
+
+  message << "\n";
+
+  if (result.hasFailed() || verbose)
+    cout << message.str();
+
+  cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
+
+  return result;
+}
+
 TestHKL::TestRegion::RegionConstructors::RegionConstructors()
     : BaseTest({}, ":0") {
   validate();
@@ -597,6 +697,18 @@ TestHKL::TestRegion::RegionConstructors::RegionConstructors()
 
 TestHKL::TestRegion::RegionConstructors::RegionConstructors(
     InputRegionArgs input, string expected)
+    : BaseTest(input, expected) {
+  validate();
+}
+
+TestHKL::TestRegion::RegionFormation::RegionFormation(
+    InputSingleRegionEval input, string expected)
+    : BaseTest(input, expected) {
+  validate();
+}
+
+TestHKL::TestRegion::RegionFailure::RegionFailure(InputRegionArgs input,
+                                                  string expected)
     : BaseTest(input, expected) {
   validate();
 }

@@ -10,6 +10,8 @@ int TestHKL::perform_tests(bool verbose) {
     cout << gen_framed("Evaluating HKL") << "\n";
 
     result(TestRegion::check_region_constructors(verbose));
+    result(TestRegion::check_region_formation(verbose));
+    result(TestRegion::check_region_failure(verbose));
 
     cout << "\n" << gen_summary(result, "Evaluation", true) << "\n";
   }
