@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -15,6 +16,7 @@ using namespace Evaluation;
 
 using std::ifstream;
 using sstream = std::stringstream;
+using std::quoted;
 using std::string;
 using std::to_string;
 
@@ -22,9 +24,11 @@ using HKL::Region;
 using HKL::RegionError;
 
 class InputRegionArgs {
-private:
-  int first{-1}, last{-1};
-  string chrom{}, strand{};
+ private:
+  opt_int first, last;
+  opt_str chrom, strand;
+  //  int first{-1}, last{-1};
+  //  string chrom{}, strand{};
 
   enum class ConstructorMode {
     Default = 0,
@@ -38,10 +42,10 @@ private:
 
   ConstructorMode mode{};
 
-public:
+ public:
   InputRegionArgs() = default;
   InputRegionArgs(string query) {
-    if (!query.empty() && query != "NA") {
+    if (query != "NA") {
       this->chrom = query;
       this->mode = ConstructorMode::SingleString;
     } else
@@ -49,72 +53,65 @@ public:
   }
 
   InputRegionArgs(string chrom, string first, string last, string strand) {
-    if (!chrom.empty() && chrom != "NA")
-      this->chrom = chrom;
+    if (chrom != "NA") this->chrom = chrom;
+    if (strand != "NA") this->strand = strand;
+    this->first = StringFormat::str_to_int(first, true);
+    this->last = StringFormat::str_to_int(last, true);
 
-    if (!strand.empty() && strand != "NA")
-      this->strand = strand;
-
-    if (auto converted_first = StringFormat::str_to_int(first)) {
-      this->first = *converted_first;
-      if (first.find('-') == 0)
-        this->first *= -1;
-      if (auto converted_last = StringFormat::str_to_int(last)) {
-        this->last = *converted_last;
-        if (last.find('-') == 0)
-          this->last *= -1;
+    if (this->chrom) {
+      if (this->first) {
+        if (this->last)
+          this->mode = ConstructorMode::ChromWithRange;
+        else
+          this->mode = ConstructorMode::ChromWithPosition;
+      } else {
+        if (this->strand)
+          this->mode = ConstructorMode::ChromWithStrand;
+        else
+          this->mode = ConstructorMode::SingleString;
+      }
+    } else {
+      if (this->first) {
+        if (this->last)
+          this->mode = ConstructorMode::Range;
+        else
+          this->mode = ConstructorMode::Position;
+      } else {
+        if (this->strand)
+          this->mode = ConstructorMode::ChromWithStrand;
+        else
+          this->mode = ConstructorMode::Default;
       }
     }
-
-    if (chrom.empty()) {
-      if (this->first < 0)
-        if (this->strand.empty())
-          this->mode = ConstructorMode::Default;
-        else
-          this->mode = ConstructorMode::ChromWithStrand;
-      else if (this->last < 0)
-        this->mode = ConstructorMode::Position;
-      else
-        this->mode = ConstructorMode::Range;
-    } else {
-      if (this->first < 0) {
-        if (this->strand.empty())
-          this->mode = ConstructorMode::SingleString;
-        else
-          this->mode = ConstructorMode::ChromWithStrand;
-      } else if (this->last < 0)
-        this->mode = ConstructorMode::ChromWithPosition;
-      else
-        this->mode = ConstructorMode::ChromWithRange;
-    }
-
-    cout << this->str() << endl;
   }
 
   string str() const {
     sstream message;
     switch (mode) {
-    case ConstructorMode::Default:
-      break;
-    case ConstructorMode::SingleString:
-      message << "'" << chrom << "'";
-      break;
-    case ConstructorMode::ChromWithStrand:
-      message << "'" << chrom << "', '" << strand << "'";
-      break;
-    case ConstructorMode::Position:
-      message << first << ", '" << strand << "'";
-      break;
-    case ConstructorMode::Range:
-      message << first << ", " << last << ", '" << strand << "'";
-      break;
-    case ConstructorMode::ChromWithPosition:
-      message << "'" << chrom << "', " << first << ", '" << strand << "'";
-      break;
-    case ConstructorMode::ChromWithRange:
-      message << "'" << chrom << "', " << first << ", " << last << ", '"
-              << strand << "'";
-      break;
+      case ConstructorMode::Default:
+        break;
+      case ConstructorMode::SingleString:
+        message << quoted(chrom.value_or(""));
+        break;
+      case ConstructorMode::ChromWithStrand:
+        message << quoted(chrom.value_or("")) << ", "
+                << quoted(strand.value_or(""));
+        break;
+      case ConstructorMode::Position:
+        message << *first << ", " << quoted(strand.value_or(""));
+        break;
+      case ConstructorMode::Range:
+        message << *first << ", " << *last << ", "
+                << quoted(strand.value_or(""));
+        break;
+      case ConstructorMode::ChromWithPosition:
+        message << quoted(chrom.value_or("")) << ", " << *first << ", "
+                << quoted(strand.value_or(""));
+        break;
+      case ConstructorMode::ChromWithRange:
+        message << quoted(chrom.value_or("")) << ", " << *first << ", " << *last
+                << ", " << quoted(strand.value_or(""));
+        break;
     }
 
     return message.str();
@@ -122,26 +119,26 @@ public:
 
   Region construct() const {
     switch (mode) {
-    case ConstructorMode::Default:
-      return Region();
-    case ConstructorMode::SingleString:
-      return Region(this->chrom);
-    case ConstructorMode::ChromWithStrand:
-      return Region(this->chrom, this->strand);
-    case ConstructorMode::Position:
-      return Region(this->first, this->strand);
-    case ConstructorMode::Range:
-      return Region(this->first, this->last, this->strand);
-    case ConstructorMode::ChromWithPosition:
-      return Region(this->chrom, this->first, this->strand);
-    case ConstructorMode::ChromWithRange:
-      return Region(this->chrom, this->first, this->last, this->strand);
+      case ConstructorMode::Default:
+        return Region();
+      case ConstructorMode::SingleString:
+        return Region(*chrom);
+      case ConstructorMode::ChromWithStrand:
+        return Region(chrom.value_or(""), strand.value_or(""));
+      case ConstructorMode::Position:
+        return Region(*first, strand.value_or(""));
+      case ConstructorMode::Range:
+        return Region(*first, *last, strand.value_or(""));
+      case ConstructorMode::ChromWithPosition:
+        return Region(chrom.value_or(""), *first, strand.value_or(""));
+      case ConstructorMode::ChromWithRange:
+        return Region(chrom.value_or(""), *first, *last, strand.value_or(""));
     }
   }
 };
 
 class RegionConstructors : public BaseTest<InputRegionArgs, string> {
-public:
+ public:
   RegionConstructors();
   RegionConstructors(InputRegionArgs input, string expected);
 
@@ -158,12 +155,12 @@ public:
 };
 
 class InputSingleRegionEval {
-private:
+ private:
   int id;
   InputRegionArgs args;
   string function;
 
-public:
+ public:
   InputSingleRegionEval() = default;
   InputSingleRegionEval(int id, InputRegionArgs args, string function)
       : id{id}, args{args}, function{function} {}
@@ -202,14 +199,13 @@ public:
   string str() const {
     sstream result;
     result << " " << id << " (" << args.str() << ")";
-    if (!function.empty())
-      result << "." << function << "()";
+    if (!function.empty()) result << "." << function << "()";
     return result.str();
   }
 };
 
 class RegionFormation : public BaseTest<InputSingleRegionEval, string> {
-public:
+ public:
   RegionFormation() = default;
   RegionFormation(InputSingleRegionEval input, string expected);
 
@@ -226,7 +222,7 @@ public:
 };
 
 class RegionFailure : public BaseTest<InputRegionArgs, string> {
-public:
+ public:
   RegionFailure();
   RegionFailure(InputRegionArgs input, string expected);
 
@@ -249,4 +245,4 @@ public:
 Stats check_region_constructors(bool verbose);
 Stats check_region_formation(bool verbose);
 Stats check_region_failure(bool verbose);
-} // namespace TestHKL::TestRegion
+}  // namespace TestHKL::TestRegion

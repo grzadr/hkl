@@ -582,16 +582,15 @@ Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
 
   message << "\n";
 
-  if (result.hasFailed() || verbose)
-    cout << message.str();
+  if (result.hasFailed() || verbose) cout << message.str();
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_formation(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_formation(
+    bool verbose) {
   Stats result;
 
   sstream message;
@@ -641,16 +640,15 @@ TestHKL::TestRegion::check_region_formation(bool verbose) {
 
   message << "\n";
 
-  if (result.hasFailed() || verbose)
-    cout << message.str();
+  if (result.hasFailed() || verbose) cout << message.str();
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_failure(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_failure(
+    bool verbose) {
   Stats result;
 
   sstream message;
@@ -674,16 +672,19 @@ TestHKL::TestRegion::check_region_failure(bool verbose) {
     failure_tests.emplace_back(
         InputRegionArgs(splitted[1], splitted[2], splitted[3], splitted[4]),
         splitted[5]);
-    //    break;
   }
+
+  message << ">>> Constructed " << failure_tests.size() << " tests\n";
+
+  message << "\n>>> Testing:\n";
+
   Evaluator eval(test_name, failure_tests);
 
   result(eval.verify(message));
 
   message << "\n";
 
-  if (result.hasFailed() || verbose)
-    cout << message.str();
+  if (result.hasFailed() || verbose) cout << message.str();
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
