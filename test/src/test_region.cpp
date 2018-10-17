@@ -556,7 +556,7 @@ using AGizmo::Evaluation::Stats;
 Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
   Stats result;
 
-  sstream message;
+  sstream message, failure;
 
   const auto &test_name = "HKL::Region::Region()"s;
 
@@ -578,11 +578,14 @@ Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
 
   Evaluator eval(test_name, contructor_tests);
 
-  result(eval.verify(message));
+  result(eval.verify(message, failure));
 
   message << "\n";
 
-  if (result.hasFailed() || verbose) cout << message.str();
+  if (verbose)
+    cout << message.str();
+  else if (result.hasFailed())
+    cout << failure.str();
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
@@ -593,7 +596,7 @@ AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_formation(
     bool verbose) {
   Stats result;
 
-  sstream message;
+  sstream message, failure;
 
   const auto &test_name = "HKL::Region Formation"s;
 
@@ -636,11 +639,14 @@ AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_formation(
 
   Evaluator eval(test_name, formation_tests);
 
-  result(eval.verify(message));
+  result(eval.verify(message, failure));
 
   message << "\n";
 
-  if (result.hasFailed() || verbose) cout << message.str();
+  if (verbose)
+    cout << message.str();
+  else if (result.hasFailed())
+    cout << failure.str();
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
@@ -651,7 +657,7 @@ AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_failure(
     bool verbose) {
   Stats result;
 
-  sstream message;
+  sstream message, failure;
 
   const auto &test_name = "HKL::Region Failure"s;
 
@@ -680,11 +686,74 @@ AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_failure(
 
   Evaluator eval(test_name, failure_tests);
 
-  result(eval.verify(message));
+  result(eval.verify(message, failure));
 
   message << "\n";
 
-  if (result.hasFailed() || verbose) cout << message.str();
+  if (verbose)
+    cout << message.str();
+  else if (result.hasFailed())
+    cout << failure.str();
+
+  cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
+
+  return result;
+}
+
+Stats TestHKL::TestRegion::check_region_special(bool verbose) {
+  Stats result;
+
+  sstream message, failure;
+
+  const auto &test_name = "HKL::Region Formation"s;
+
+  message << "\n~~~ Checking " << test_name << "\n";
+
+  message << "\n>>> Constructing tests\n";
+
+  ifstream input;
+  string line;
+
+  Files::open_file("test/input/formation.tsv", input);
+
+  string header;
+  getline(input, header);
+
+  auto header_splitted = StringDecompose::str_split(header, "\t");
+
+  vector<string> functions{};
+  std::copy(next(header_splitted.begin(), 6), header_splitted.end(),
+            back_inserter(functions));
+
+  vector<RegionFormation> formation_tests{};
+
+  while (getline(input, line)) {
+    const auto splitted = StringDecompose::str_split(line, "\t");
+    auto id = stoi(splitted[0]);
+    auto args =
+        InputRegionArgs(splitted[1], splitted[2], splitted[3], splitted[4]);
+    InputSingleRegionEval first_input{id, args, ""s};
+    formation_tests.emplace_back(first_input, splitted[5]);
+    for (size_t i = 0; i < functions.size(); ++i)
+      formation_tests.emplace_back(
+          InputSingleRegionEval{id, args, functions[i]}, splitted[i + 6]);
+    //    break;
+  }
+
+  message << ">>> Constructed " << formation_tests.size() << " tests\n";
+
+  message << "\n>>> Testing:\n";
+
+  Evaluator eval(test_name, formation_tests);
+
+  result(eval.verify(message, failure));
+
+  message << "\n";
+
+  if (verbose)
+    cout << message.str();
+  else if (result.hasFailed())
+    cout << failure.str();
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 

@@ -245,4 +245,5 @@ class RegionFailure : public BaseTest<InputRegionArgs, string> {
 Stats check_region_constructors(bool verbose);
 Stats check_region_formation(bool verbose);
 Stats check_region_failure(bool verbose);
+Stats check_region_special(bool verbose);
 }  // namespace TestHKL::TestRegion
