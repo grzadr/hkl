@@ -1,15 +1,25 @@
 #pragma once
 
-#include "comtol.h"
-#include "region.h"
+#include <fstream>
+#include <iostream>
+#include <numeric>
+
+#include "hkl/region.hpp"
+
+#include "agizmo/files.hpp"
+
+namespace HKL {
 
 using std::move;
 
+using std::accumulate;
+
 using runerror = std::runtime_error;
 using ooferror = std::out_of_range;
+using std::getline;
 using std::ifstream;
 
-namespace HKL {
+using namespace AGizmo;
 
 class RegionSeq {
 private:
@@ -65,13 +75,13 @@ public:
   void setStrand(string strand = "") { this->loc.setStrand(strand); }
 
   string str() const noexcept {
-    string result = "RegionSeq\n  Name: '" + this->name + "'\n";
+    sstream result;
+    result << "IDX=" << this->name << ";";
+    result << "LEN=" << this->getLength() << ";";
+    result << "LOC=" << this->loc << ";";
+    result << "SEQ=" << this->seq;
 
-    result += "Length: " + to_string(this->getLength()) + "\n";
-    result += "Region: " + this->loc.str() + "\n";
-    result += "   Seq: " + this->seq + "\n";
-
-    return result;
+    return result.str();
   }
 
   friend std::ostream &operator<<(ostream &stream, const RegionSeq &seq) {
@@ -157,7 +167,7 @@ public:
       return this->seq.substr(first, length);
   }
 
-  opt_str getSeqSlice(const Region &loc) const noexcept {
+  optional<string> getSeqSlice(const Region &loc) const noexcept {
     if (const auto &shared = this->loc.getShared(loc)) {
       return this->getSeqSlice(
           static_cast<size_t>((*shared).getPosRel(this->loc).value()),
@@ -186,8 +196,8 @@ public:
     if (!this->isEmpty()) {
       result.reserve(result.size() +
                      (chunk + line + 1) * (this->size() % line));
-      for (auto ele : str_split(this->seq, line))
-        result += "\n" + str_devide(ele, chunk, " ");
+      for (auto ele : StringDecompose::str_segment(this->seq, line))
+        result += "\n" + StringDecompose::str_segment(ele, chunk, " ");
     }
 
     return result + "\n";
@@ -266,7 +276,7 @@ public:
   static vector<RegionSeq> readFASTAFile(const string &file_name,
                                          bool upper = false) {
     ifstream input;
-    open_file(file_name, input);
+    Files::open_file(file_name, input);
 
     return readFASTAFile(input, upper);
   }
@@ -284,7 +294,7 @@ public:
 
   FASTAReader(string file_name) {
     this->file_name = move(file_name);
-    open_file(this->file_name, input);
+    Files::open_file(this->file_name, input);
   }
 
   ~FASTAReader() { input.close(); }

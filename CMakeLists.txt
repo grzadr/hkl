@@ -30,7 +30,7 @@ install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)
 
 include(CTest)
 
-add_executable(TestHKL test/src/test_hkl.cpp test/src/test_region.cpp)
+add_executable(TestHKL test/src/test_hkl.cpp test/src/test_region.cpp test/src/test_regionseq.cpp)
 target_include_directories(TestHKL
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -42,6 +42,11 @@ target_compile_features(TestHKL PRIVATE cxx_std_17)
 # 				       -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
 # 				       -fvisibility=hidden -Werror -Wall -pthread)
 
-add_test(Test TestHKL)
+#add_test(Test TestHKL)
+add_test(NAME "Test" COMMAND TestHKL)
 set_tests_properties(Test PROPERTIES WORKING_DIRECTORY
-  ${CMAKE_CURRENT_SOURCE_DIR}/test)
+  ${CMAKE_CURRENT_SOURCE_DIR})
+
+#add_custom_command(TARGET TestHKL
+#                   POST_BUILD
+#                   COMMAND "ctest" "--output-on-failure")

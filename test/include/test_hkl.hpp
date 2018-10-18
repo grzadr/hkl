@@ -2,6 +2,7 @@
 
 #include "agizmo/evaluation.hpp"
 #include "test_region.hpp"
+#include "test_regionseq.hpp"
 
 using namespace AGizmo::Evaluation;
 
