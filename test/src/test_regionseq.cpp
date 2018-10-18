@@ -1,93 +1,5 @@
 #include "test_regionseq.hpp"
 
-// General::Stats EvalRegionSeq::check_basic(bool verbose) {
-//  Stats stats;
-
-//  sstream message;
-
-//  int width = 67;
-
-//  cout << "~~~ Basic functionality" << endl;
-
-//  try {
-//    message << std::right << setw(3) << ++stats << std::left <<
-//    std::setw(width)
-//            << ") Checking basic contructor";
-//    auto test = RegionSeq();
-//    message << passed_str << "\n";
-//  } catch (const std::runtime_error &ex) {
-//    ++stats.failed;
-//    message << failed_str << "\n";
-//    cout << ex.what() << endl;
-//    message << gen_framed("SKIPPING REST OF TESTS", 80, '@') << "\n";
-//    return stats;
-//  }
-
-//  try {
-//    message << std::right << setw(3) << ++stats << std::left <<
-//    std::setw(width)
-//            << ") Constructing small RegionSeq";
-//    auto test = RegionSeq("TEST", "1234567890");
-//    message << passed_str << "\n";
-//  } catch (const std::runtime_error &ex) {
-//    ++stats.failed;
-//    message << failed_str << "\n";
-//    cout << ex.what() << endl;
-//    message << gen_framed("SKIPPING REST OF TESTS", 80, '@') << "\n";
-//    return stats;
-//  }
-
-//  message << std::right << setw(3) << ++stats << std::left << std::setw(width)
-//          << ") Checking Region";
-
-//  auto test = RegionSeq("TEST", "0123456789");
-//  if (test.getLoc().str() == ":1-10")
-//    message << passed_str << "\n";
-//  else {
-//    message << failed_str << "\n";
-//    message << "Generated Region: " << test.getLoc() << "\n";
-//    ++stats.failed;
-//  }
-
-//  message << std::right << setw(3) << ++stats << std::left << std::setw(width)
-//          << ") Setting Different Region";
-
-//  try {
-//    test.setLoc(Region("1:21-30"));
-//    if (test.getLoc().str() == "1:21-30")
-//      message << passed_str << "\n";
-//    else {
-//      cout << test.getLoc() << endl;
-//      message << failed_str << "\n";
-//      ++stats.failed;
-//    }
-//  } catch (const std::runtime_error &ex) {
-//    ++stats.failed;
-//    message << failed_str << "\n";
-//    message << "Error message:\n" << ex.what() << "\n";
-//  }
-
-//  message << std::right << setw(3) << ++stats << std::left << std::setw(width)
-//          << ") Setting Wrong Region";
-
-//  try {
-//    test.setLoc(Region("1:20-30"));
-//    message << failed_str << "\n";
-//    ++stats.failed;
-//    cout << test.getLoc() << endl;
-//  } catch (const std::runtime_error &ex) {
-//    message << passed_str << "\n";
-//    message << "Error message:\n" << ex.what() << "\n";
-//  }
-
-//  if (verbose or stats.failed)
-//    cout << message.str() << endl;
-
-//  cout << "~~~ " << gen_summary(stats, "Check") << "\n" << endl;
-
-//  return stats;
-//}
-
 // General::Stats EvalRegionSeq::check_get_seq(bool verbose) {
 //  Stats stats;
 
@@ -97,7 +9,7 @@
 
 //  cout << "~~~ Checking Sequence Getters" << endl;
 
-//  auto test = RegionSeq("TEST", "0123456789", Region("1", 20, 29));
+//  auto test = RegionSeq();
 
 //  message << std::right << setw(3) << ++stats << std::left << std::setw(width)
 //          << ") Getting first character";
@@ -338,11 +250,79 @@ AGizmo::Evaluation::Stats TestHKL::TestRegionSeq::check_basic(bool verbose) {
 
   sstream message, failure;
 
-  const auto &test_name = "HKL::Region::Region()"s;
+  const auto &test_name = "HKL::RegionSeq::RegionSeq"s;
 
   message << "\n~~~ Checking " << test_name << "\n";
 
-  vector<RegionSeqConstructors> contructor_tests{};
+  vector<RegionSeqConstructors> constructors_tests{
+      {{"", "", ""}, "IDX=;LEN=0;LOC=:0;SEQ="},
+      {{"A", "", ""}, "IDX=A;LEN=0;LOC=:0;SEQ="},
+      {{"A", "ATCG", ""}, "IDX=A;LEN=4;LOC=:1-4;SEQ=ATCG"},
+      {{"A", "ATCG", ":10-13"}, "IDX=A;LEN=4;LOC=:10-13;SEQ=ATCG"},
+  };
+
+  Evaluator eval(test_name, constructors_tests);
+
+  result(eval.verify(message, failure));
+
+  message << "\n";
+
+  if (verbose)
+    cout << message.str();
+  else if (result.hasFailed())
+    cout << failure.str();
+
+  cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
+
+  return result;
+}
+
+AGizmo::Evaluation::Stats TestHKL::TestRegionSeq::check_get_seq(bool verbose) {
+  Stats result;
+
+  sstream message, failure;
+
+  const auto &test_name = "HKL::RegionSeq::getSeq"s;
+
+  message << "\n~~~ Checking " << test_name << "\n";
+
+  vector<RegionSeqGetSeq> contructor_tests{
+      {{{"TEST", "0123456789", ""}, 0}, "0"},
+      {{{"TEST", "0123456789", ""}, -10}, "0"},
+      {{{"TEST", "0123456789", ""}, 10}, "ooferror"},
+      {{{"TEST", "0123456789", ""}, 9}, "9"},
+      {{{"TEST", "0123456789", ""}, -1}, "9"},
+
+      {{{"TEST", "0123456789", ""}, pair<int, size_t>{0, 2}}, "01"},
+      {{{"TEST", "0123456789", ""}, pair<int, size_t>{8, 2}}, "89"},
+      {{{"TEST", "0123456789", ""}, pair<int, size_t>{8, 0}}, "89"},
+      {{{"TEST", "0123456789", ""}, pair<int, size_t>{8, 3}}, "89"},
+      {{{"TEST", "0123456789", ""}, pair<int, size_t>{10, 3}}, ""},
+
+      {{{"TEST", "0123456789", ""}, ":1"}, "0"},
+      {{{"TEST", "0123456789", ""}, ":1-2"}, "01"},
+      {{{"TEST", "0123456789", ""}, ":9-10"}, "89"},
+      {{{"TEST", "0123456789", ""}, ":9-11"}, "89"},
+      {{{"TEST", "0123456789", ""}, ":11"}, ""},
+
+      {{{"TEST", "0123456789", ""}, "1:1"}, "0"},
+      {{{"TEST", "0123456789", ""}, "1:1-2"}, "01"},
+      {{{"TEST", "0123456789", ""}, "1:9-10"}, "89"},
+      {{{"TEST", "0123456789", ""}, "1:9-11"}, "89"},
+      {{{"TEST", "0123456789", ""}, "1:11"}, ""},
+
+      {{{"TEST", "0123456789", "1:10-19"}, ":10"}, "0"},
+      {{{"TEST", "0123456789", "1:10-19"}, ":10-11"}, "01"},
+      {{{"TEST", "0123456789", "1:10-19"}, ":18-19"}, "89"},
+      {{{"TEST", "0123456789", "1:10-19"}, ":18-20"}, "89"},
+      {{{"TEST", "0123456789", "1:10-19"}, ":20"}, ""},
+
+      {{{"TEST", "0123456789", "1:10-19"}, "1:10"}, "0"},
+      {{{"TEST", "0123456789", "1:10-19"}, "1:10-11"}, "01"},
+      {{{"TEST", "0123456789", "1:10-19"}, "1:18-19"}, "89"},
+      {{{"TEST", "0123456789", "1:10-19"}, "1:18-20"}, "89"},
+      {{{"TEST", "0123456789", "1:10-19"}, "1:20"}, ""},
+  };
 
   Evaluator eval(test_name, contructor_tests);
 
@@ -362,6 +342,12 @@ AGizmo::Evaluation::Stats TestHKL::TestRegionSeq::check_basic(bool verbose) {
 
 TestHKL::TestRegionSeq::RegionSeqConstructors::RegionSeqConstructors(
     InputRegionSeq input, string expected)
+    : BaseTest(input, expected) {
+  validate();
+}
+
+TestHKL::TestRegionSeq::RegionSeqGetSeq::RegionSeqGetSeq(
+    InputRegionSeqGetSeq input, string expected)
     : BaseTest(input, expected) {
   validate();
 }

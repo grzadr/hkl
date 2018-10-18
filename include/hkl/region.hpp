@@ -58,21 +58,22 @@ enum class RegionErrorType {
 using RET = RegionErrorType;
 
 class RegionError : public std::exception {
-private:
+ private:
   string query{};
   string message{};
   RET type{RET::None};
 
   void genMessage() {
-    this->message = "\n######### REGION ERROR #########\n"
-                    "    Name: " +
-                    this->getName() +
-                    "\n"
-                    "   Query: " +
-                    this->query + "\n";
+    this->message =
+        "\n######### REGION ERROR #########\n"
+        "    Name: " +
+        this->getName() +
+        "\n"
+        "   Query: " +
+        this->query + "\n";
   }
 
-public:
+ public:
   RegionError() = default;
   virtual ~RegionError() override = default;
   RegionError(RET type, string query) : type{type} {
@@ -105,22 +106,22 @@ public:
   const RET &getType() const { return this->type; }
   string getName() const {
     switch (this->type) {
-    case RET::None:
-      return "None";
-    case RET::ChrFormat:
-      return "ChrFormat";
-    case RET::PosMissing:
-      return "PosMissing";
-    case RET::PosFormat:
-      return "PosFormat";
-    case RET::PosRange:
-      return "PosRange";
-    case RET::StrandMissing:
-      return "StrandMissing";
-    case RET::StrandFormat:
-      return "StrandFormat";
-    default:
-      throw std::runtime_error("Unknown Error\n");
+      case RET::None:
+        return "None";
+      case RET::ChrFormat:
+        return "ChrFormat";
+      case RET::PosMissing:
+        return "PosMissing";
+      case RET::PosFormat:
+        return "PosFormat";
+      case RET::PosRange:
+        return "PosRange";
+      case RET::StrandMissing:
+        return "StrandMissing";
+      case RET::StrandFormat:
+        return "StrandFormat";
+      default:
+        throw std::runtime_error("Unknown Error\n");
     }
   }
   virtual inline const char *what() const noexcept override {
@@ -129,7 +130,7 @@ public:
 };
 
 class Region {
-private:
+ private:
   string chrom{""};
   int first{0};
   int last{0};
@@ -153,7 +154,7 @@ private:
       return pos - this->first;
   }
 
-public:
+ public:
   Region() = default;
 
   Region(string query) {
@@ -274,8 +275,7 @@ public:
   }
 
   void setRange(int first, int last = 0) {
-    if (first < 0 || last < 0)
-      throw RegionError{RET::PosFormat, first, last};
+    if (first < 0 || last < 0) throw RegionError{RET::PosFormat, first, last};
 
     if (last) {
       if (!first || last < first)
@@ -291,31 +291,30 @@ public:
     this->setRange(range.first, range.second);
   }
   void setRange(string coord) {
-    if (!coord.size())
-      this->setRange(0);
+    if (!coord.size()) this->setRange(0);
 
     switch (count_all(coord, '-')) {
-    case 0:
-      if (auto first = str_to_int(coord))
-        this->setRange(*first);
-      else
-        throw RegionError(RET::PosFormat, coord);
-      break;
-    case 1: {
-      auto mark_pos = coord.find("-");
+      case 0:
+        if (auto first = str_to_int(coord))
+          this->setRange(*first);
+        else
+          throw RegionError(RET::PosFormat, coord);
+        break;
+      case 1: {
+        auto mark_pos = coord.find("-");
 
-      if (!mark_pos || mark_pos == coord.length() - 1)
-        throw RegionError(RET::PosMissing, coord);
+        if (!mark_pos || mark_pos == coord.length() - 1)
+          throw RegionError(RET::PosMissing, coord);
 
-      if (auto first = str_to_int(coord.substr(0, mark_pos));
-          auto last = str_to_int(coord.substr(mark_pos + 1)))
-        this->setRange(*first, *last);
-      else
-        throw RegionError(RET::PosFormat, coord);
-      break;
-    }
-    default:
-      throw RegionError{RET::PosFormat, coord};
+        if (auto first = str_to_int(coord.substr(0, mark_pos));
+            auto last = str_to_int(coord.substr(mark_pos + 1)))
+          this->setRange(*first, *last);
+        else
+          throw RegionError(RET::PosFormat, coord);
+        break;
+      }
+      default:
+        throw RegionError{RET::PosFormat, coord};
     }
   }
 
@@ -326,27 +325,27 @@ public:
 
   void setStrand(char strand) {
     switch (strand) {
-    case 0:
-    case '0':
-      this->strand = 0;
-      break;
-    case '+':
-    case '1':
-    case 'F':
-    case 'f':
-    case 'P':
-    case 'p':
-      this->strand = '+';
-      break;
-    case '-':
-    case 'R':
-    case 'r':
-    case 'N':
-    case 'n':
-      this->strand = '-';
-      break;
-    default:
-      throw RegionError{RET::StrandFormat, strand};
+      case 0:
+      case '0':
+        this->strand = 0;
+        break;
+      case '+':
+      case '1':
+      case 'F':
+      case 'f':
+      case 'P':
+      case 'p':
+        this->strand = '+';
+        break;
+      case '-':
+      case 'R':
+      case 'r':
+      case 'N':
+      case 'n':
+        this->strand = '-';
+        break;
+      default:
+        throw RegionError{RET::StrandFormat, strand};
     }
   }
   void setStrand(string strand = "") {
@@ -361,8 +360,7 @@ public:
   }
 
   void resize(int upstream, int downstream, bool orient = true) {
-    if (this->isEmpty())
-      return;
+    if (this->isEmpty()) return;
 
     int temp_first = this->first;
     int temp_last = this->last;
@@ -375,10 +373,8 @@ public:
       temp_last += downstream;
     }
 
-    if (temp_first < 1)
-      temp_first = 1;
-    if (temp_last < 1)
-      temp_last = 0;
+    if (temp_first < 1) temp_first = 1;
+    if (temp_last < 1) temp_last = 0;
 
     if (temp_first > temp_last)
       this->setRange(0, 0);
@@ -451,10 +447,8 @@ public:
   }
 
   opt_int dist(const Region &other, bool orient = false) const {
-    if (!this->sharesChrom(other))
-      return nullopt;
-    if (this->sharesRange(other))
-      return 0;
+    if (!this->sharesChrom(other)) return nullopt;
+    if (this->sharesRange(other)) return 0;
 
     int dist = this->first > other.last ? other.last - this->first
                                         : other.first - this->last;
@@ -537,14 +531,21 @@ public:
   }
 
   opt_region getShared(const Region &other) const {
-    if (!this->sharesChrom(other))
+    //    std::cout << "Getting Shared: " << *this << ";" << other << endl;
+    //    if (!this->sharesChrom(other))
+    //      return nullopt;
+    //    else if (!this->sharesRange(other)) {
+    //      cout << "Same Chrom but different range" << endl;
+    //      cout << this->isPure() << " || " << other.isPure() << endl;
+    //      cout << (this->isPure() || other.isPure()) << endl;
+    //      if (this->isPure() || other.isPure())
+    //        return nullopt;
+    //      else
+    //        return Region(this->chrom, string(1, this->getStrand(other)));
+    //  }
+    if (!this->shares(other))
       return nullopt;
-    else if (!this->sharesRange(other)) {
-      if (this->isPure() || other.isPure())
-        return nullopt;
-      else
-        return Region(this->chrom, string(1, this->getStrand(other)));
-    } else
+    else
       return Region(this->getChrom(other), max(this->first, other.first),
                     min(this->last, other.last), this->getStrand(other));
   }
@@ -575,28 +576,30 @@ public:
     else
       return nullopt;
   }
+
   opt_region getGap(const Region &other) const {
     if (auto dist = this->dist(other)) {
       switch (abs(*dist)) {
-      case 0:
-        return nullopt;
-      case 1:
-        return Region(this->getChrom(other), string(1, this->getStrand(other)));
-      default:
-        if (this->first < other.first)
-          return Region(this->getChrom(other), this->last + 1, other.first - 1,
-                        this->getStrand(other));
-        else
-          return Region(this->getChrom(other), other.last + 1, this->first - 1,
-                        this->getStrand(other));
+        case 0:
+          return nullopt;
+        case 1:
+          return Region(this->getChrom(other),
+                        string(1, this->getStrand(other)));
+        default:
+          if (this->first < other.first)
+            return Region(this->getChrom(other), this->last + 1,
+                          other.first - 1, this->getStrand(other));
+          else
+            return Region(this->getChrom(other), other.last + 1,
+                          this->first - 1, this->getStrand(other));
       }
     } else
       return nullopt;
   }
 
-  template <class Output> Output getSlices(int size, Output out) const {
-    if (this->isEmpty())
-      return out;
+  template <class Output>
+  Output getSlices(int size, Output out) const {
+    if (this->isEmpty()) return out;
     if (this->length <= static_cast<size_t>(size))
       *out++ = *this;
     else {
@@ -668,12 +671,13 @@ public:
   }
 };
 
-} // namespace HKL
+}  // namespace HKL
 
 namespace std {
-template <> struct hash<HKL::Region> {
+template <>
+struct hash<HKL::Region> {
   std::size_t operator()(const HKL::Region &r) const {
     return std::hash<std::string>{}(r.str());
   }
 };
-} // namespace std
+}  // namespace std

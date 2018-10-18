@@ -198,7 +198,7 @@ PYBIND11_MODULE(pyHKL, m) {
       .def("__len__", [](const RegionSeq &a) { return a.size(); })
 
       .def("getName", &RegionSeq::getName)
-      .def("getSeq", &RegionSeq::getSeq)
+      .def("getSeq", py::overload_cast<>(&RegionSeq::getSeq, py::const_))
       .def("getLoc", &RegionSeq::getLoc)
       .def("getChrom", &RegionSeq::getName)
       .def("getFirst", &RegionSeq::getFirst)
@@ -206,17 +206,15 @@ PYBIND11_MODULE(pyHKL, m) {
       .def("getLength", &RegionSeq::getLast)
       .def("isEmpty", &RegionSeq::isEmpty)
 
-      .def("at", py::overload_cast<size_t>(&RegionSeq::at, py::const_), "pos"_a)
-      .def("at", py::overload_cast<const Region &>(&RegionSeq::at, py::const_),
-           "pos"_a)
+      //      .def("at", py::overload_cast<int>(&RegionSeq::at, py::const_),
+      //      "pos"_a)
+      .def("at", &RegionSeq::at, "pos"_a)
 
-      .def("getSeqSlice",
-           py::overload_cast<size_t, size_t>(&RegionSeq::getSeqSlice,
-                                             py::const_),
+      .def("getSeq",
+           py::overload_cast<int, size_t>(&RegionSeq::getSeq, py::const_),
            "first"_a, "length"_a)
-      .def("getSeqSlice",
-           py::overload_cast<const Region &>(&RegionSeq::getSeqSlice,
-                                             py::const_),
+      .def("getSeq",
+           py::overload_cast<const Region &>(&RegionSeq::getSeq, py::const_),
            "loc"_a)
 
       .def("getSlice", &RegionSeq::getSlice, "loc"_a)

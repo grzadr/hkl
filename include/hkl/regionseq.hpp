@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 #include <numeric>
+#include <optional>
+#include <stdexcept>
 
 #include "hkl/region.hpp"
 
@@ -22,12 +24,12 @@ using std::ifstream;
 using namespace AGizmo;
 
 class RegionSeq {
-private:
+ private:
   string name{""};
   string seq{""};
   Region loc = Region();
 
-public:
+ public:
   RegionSeq() = default;
 
   RegionSeq(string name, string seq, Region loc = Region()) {
@@ -53,9 +55,8 @@ public:
   }
 
   void setLoc(Region loc) {
-    if (!this->seq.size() and !loc.isEmpty())
-      throw runerror("Setting location for empty sequence "
-                     "is prohibited!");
+    if (!this->seq.size() && !loc.isEmpty())
+      throw runerror("Setting location for empty sequence is prohibited!");
 
     if (loc.isEmpty())
       this->resetLoc();
@@ -94,7 +95,8 @@ public:
   }
 
   friend bool operator==(const RegionSeq &left, const string &right) {
-    return (left.seq == right.c_str());
+    //    return (left.seq == right.c_str());
+    return (left.seq == right);
   }
 
   friend bool operator==(const RegionSeq &left, const char *right) {
@@ -140,58 +142,43 @@ public:
   bool isEmpty() const { return this->loc.isEmpty(); }
 
   const char &operator[](size_t pos) const { return this->seq[pos]; }
-  const char &at(size_t pos) const {
-    if (pos < this->size())
-      return this->seq[pos];
+  const char &at(int pos) const {
+    const auto pos_t = pos < 0 ? this->size() - static_cast<size_t>(abs(pos))
+                               : static_cast<size_t>(pos);
+    if (pos_t > this->size() - 1)
+      throw std::out_of_range{"Position is out of the scope of this sequence"};
+
+    return this->seq[pos_t];
+  }
+
+  string getSeq(int first, size_t length = 0) const noexcept {
+    const auto first_t = first < 0
+                             ? this->size() - static_cast<size_t>(abs(first))
+                             : static_cast<size_t>(first);
+
+    if (first_t >= this->size()) return "";
+
+    return this->seq.substr(first_t, length ? length : this->size());
+  }
+
+  string getSeq(const Region &loc) const noexcept {
+    if (auto shared = this->loc.getShared(loc))
+      return this->getSeq((*shared).getPosRel(this->loc).value(),
+                          (*shared).getLength());
     else
-      throw ooferror{"Position is out of the scope of this sequence"};
-  }
-
-  const char &at(const Region &pos) const {
-    if (!pos.isPos())
-      throw runerror{"Region does not consist of single position"};
-
-    if (!pos.inside(this->loc))
-      throw ooferror{"Position is not located in this sequence"};
-
-    return this->seq.at(static_cast<size_t>(*pos.getPosRel(this->loc)));
-  }
-
-  string getSeqSlice(size_t first, size_t length) const {
-    if (first >= this->getLength())
-      throw ooferror{"Range (" + to_string(first) + ", " + to_string(length) +
-                     ") out of scope of this Seq!"};
-    else if (length - first + 1 >= this->getLength())
-      throw ooferror("Requested slice is longer than the sequence itself!");
-    else
-      return this->seq.substr(first, length);
-  }
-
-  optional<string> getSeqSlice(const Region &loc) const noexcept {
-    if (const auto &shared = this->loc.getShared(loc)) {
-      return this->getSeqSlice(
-          static_cast<size_t>((*shared).getPosRel(this->loc).value()),
-          (*shared).getLength());
-    } else
-      return nullopt;
+      return "";
   }
 
   optional<RegionSeq> getSlice(const Region &loc) const noexcept {
-    if (const auto &shared = this->loc.getShared(loc)) {
-      return RegionSeq(
-          this->name,
-          this->getSeqSlice(
-              static_cast<size_t>((*shared).getPosRel(this->loc).value()),
-              (*shared).getLength()),
-          *shared);
-    } else
+    if (const auto &shared = this->loc.getShared(loc))
+      return RegionSeq(this->name, this->getSeq(*shared), *shared);
+    else
       return nullopt;
   }
 
   string toFASTA(size_t line = 60, size_t chunk = 0, bool loc = false) const {
     string result = ">" + this->name;
-    if (loc)
-      result += this->loc.str();
+    if (loc) result += "|" + this->loc.str();
 
     if (!this->isEmpty()) {
       result.reserve(result.size() +
@@ -209,8 +196,8 @@ public:
   auto cend() const { return this->seq.cend(); }
 
   int countGC() const {
-    return accumulate(this->cbegin(), this->cend(), 0, [](int a, char c) {
-      return a + (c == 'C' or c == 'c' || c == 'G' || c == 'g');
+    return accumulate(cbegin(), cend(), 0, [](int a, char c) {
+      return a + (c == 'C' || c == 'c' || c == 'G' || c == 'g');
     });
   }
 
@@ -220,13 +207,12 @@ public:
 };
 
 class FASTAReader {
-private:
+ private:
   static void prepareSeq(string &old_name, string &name, string &seq,
                          bool upper) {
     swap(name, old_name);
     seq.erase(std::remove(seq.begin(), seq.end(), ' '), seq.end());
-    if (upper)
-      transform(seq.begin(), seq.end(), seq.begin(), toupper);
+    if (upper) transform(seq.begin(), seq.end(), seq.begin(), toupper);
   }
 
   static string cutFASTAMarker(const string &name) {
@@ -236,7 +222,7 @@ private:
   string file_name, old_name;
   ifstream input;
 
-public:
+ public:
   static bool readFASTASeq(ifstream &input, string &old_name, string &name,
                            string &seq, bool upper = false) {
     string line{};
@@ -244,8 +230,7 @@ public:
     seq = {};
 
     while (getline(input, line)) {
-      if (!line.size())
-        continue;
+      if (!line.size()) continue;
 
       if (line.at(0) == '>') {
         name = cutFASTAMarker(line);
@@ -317,4 +302,4 @@ public:
   }
 };
 
-} // namespace HKL
+}  // namespace HKL
