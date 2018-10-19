@@ -105,18 +105,18 @@ class RegionSeq {
 
   template <class T>
   friend bool operator!=(const RegionSeq &left, const T &right) {
-    return !(left.seq == right);
+    return !(left == right);
   }
 
-  template <class T>
-  friend bool operator==(const T &left, const RegionSeq &right) {
-    return (left == right.seq);
-  }
+  //  template <class T>
+  //  friend bool operator==(const T &left, const RegionSeq &right) {
+  //    return (left == right.seq);
+  //  }
 
-  template <class T>
-  friend bool operator!=(const T &left, const RegionSeq &right) {
-    return !(left == right.seq);
-  }
+  //  template <class T>
+  //  friend bool operator!=(const T &left, const RegionSeq &right) {
+  //    return !(left == right.seq);
+  //  }
 
   friend bool operator<(const RegionSeq &left, const RegionSeq &right) {
     if (left.loc < right.loc)

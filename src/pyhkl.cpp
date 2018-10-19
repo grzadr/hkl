@@ -96,7 +96,7 @@ PYBIND11_MODULE(pyHKL, m) {
 
       .def("getLength", &Region::getLength)
 
-      .def("at", &Region::at, "pos"_a, "orient"_a = false)
+      .def("at", &Region::at, "pos"_a)
       .def("str", &Region::str)
 
       // Compare
@@ -105,6 +105,7 @@ PYBIND11_MODULE(pyHKL, m) {
 
       .def("sameRange", &Region::sameRange, "other"_a)
       .def("sharesRange", &Region::sharesRange, "other"_a)
+      .def("sharesPos", &Region::sharesPos, "pos"_a)
 
       .def("sameStrand", &Region::sameStrand, "other"_a)
       .def("sharesStrand", &Region::sharesStrand, "other"_a)
@@ -127,6 +128,8 @@ PYBIND11_MODULE(pyHKL, m) {
       .def("getUnion", &Region::getUnion, "other"_a)
       .def("getDiff", &Region::getDiff, "other"_a)
       .def("getGap", &Region::getGap, "other"_a)
+      .def("getSlice", &Region::getSlice, "pos"_a, "length"_a = 0)
+      .def("getSlices", &Region::getSlices, "length"_a)
 
       // Share Rate
       .def("getSharedLength", &Region::getSharedLength, "other"_a)
@@ -240,6 +243,10 @@ PYBIND11_MODULE(pyHKL, m) {
       .def("readFASTAFile",
            py::overload_cast<bool>(&FASTAReader::readFASTAFile),
            "upper"_a = false)
+      .def_static(
+          "readFASTAFile",
+          py::overload_cast<const string &, bool>(&FASTAReader::readFASTAFile),
+          "file_name"_a, "upper"_a = false)
       .def("readFASTASeq", py::overload_cast<bool>(&FASTAReader::readFASTASeq),
            "upper"_a = false);
   ;

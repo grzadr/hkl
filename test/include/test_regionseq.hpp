@@ -19,6 +19,7 @@ using ooferror = std::out_of_range;
 using namespace AGizmo;
 using namespace Evaluation;
 
+using HKL::FASTAReader;
 using HKL::Region;
 using HKL::RegionSeq;
 
@@ -124,4 +125,5 @@ class RegionSeqGetSeq : public BaseTest<InputRegionSeqGetSeq, string> {
 
 Stats check_basic(bool verbose);
 Stats check_get_seq(bool verbose);
+Stats check_fasta_reader(bool verbose);
 }  // namespace TestHKL::TestRegionSeq

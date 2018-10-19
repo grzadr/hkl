@@ -5,7 +5,7 @@ using AGizmo::Evaluation::Stats;
 Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
   Stats result;
 
-  sstream message, failure;
+  sstream message;
 
   const auto &test_name = "HKL::Region::Region()"s;
 
@@ -14,7 +14,7 @@ Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
   vector<RegionConstructors> contructor_tests{
       {{""}, ":0"},
       {{":0"}, ":0"},
-      {{"", "0", "0", "0"}, ":01"},
+      {{"", "0", "0", "0"}, ":0"},
       {{"", "0", "0", ""}, ":0"},
       {{"", "", "", "+"}, ":0/+"},
       {{"A:1-2/+"}, "A:1-2/+"},
@@ -26,24 +26,20 @@ Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
   };
 
   Evaluator eval(test_name, contructor_tests);
-
-  result(eval.verify(message, failure));
-
-  message << "\n";
+  result(eval.verify());
 
   if (verbose)
-    cout << message.str();
-  else if (result.hasFailed())
-    cout << remove_passed(message.str()) << endl;
-  //    cout << failure.str();
+    cout << message.str() << eval.message << "\n";
+  else if (eval.hasFailed())
+    cout << message.str() << eval.failed << "\n";
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_formation(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_formation(
+    bool verbose) {
   Stats result;
 
   sstream message, failure;
@@ -83,28 +79,24 @@ TestHKL::TestRegion::check_region_formation(bool verbose) {
     //    break;
   }
 
-  message << ">>> Constructed " << formation_tests.size() << " tests\n";
-
-  message << "\n>>> Testing:\n";
+  message << ">>> Constructed " << formation_tests.size() << " tests\n"
+          << "\n>>> Testing\n";
 
   Evaluator eval(test_name, formation_tests);
-
-  result(eval.verify(message, failure));
-
-  message << "\n";
+  result(eval.verify());
 
   if (verbose)
-    cout << message.str();
-  else if (result.hasFailed())
-    cout << failure.str();
+    cout << message.str() << eval.message << "\n";
+  else if (eval.hasFailed())
+    cout << message.str() << eval.failed << "\n";
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_failure(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_failure(
+    bool verbose) {
   Stats result;
 
   sstream message, failure;
@@ -130,20 +122,16 @@ TestHKL::TestRegion::check_region_failure(bool verbose) {
         splitted[5]);
   }
 
-  message << ">>> Constructed " << failure_tests.size() << " tests\n";
-
-  message << "\n>>> Testing:\n";
+  message << ">>> Constructed " << failure_tests.size() << " tests\n"
+          << "\nTesting:\n";
 
   Evaluator eval(test_name, failure_tests);
-
-  result(eval.verify(message, failure));
-
-  message << "\n";
+  result(eval.verify());
 
   if (verbose)
-    cout << message.str();
-  else if (result.hasFailed())
-    cout << failure.str();
+    cout << message.str() << eval.message << "\n";
+  else if (eval.hasFailed())
+    cout << message.str() << eval.failed << "\n";
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
@@ -197,35 +185,28 @@ Stats TestHKL::TestRegion::check_region_paired(bool verbose) {
     message << "\n>>> Testing:\n";
 
     Evaluator eval(test_name, special_tests);
-
-    result(eval.verify(message, failure));
-
-    message << "\n";
+    result(eval.verify());
 
     if (verbose)
-      cout << message.str();
-    else if (result.hasFailed())
-      cout << failure.str();
+      cout << message.str() << eval.message << "\n";
+    else if (eval.hasFailed())
+      cout << message.str() << eval.failed << "\n";
 
-    cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
+    cout << "~~~ " << gen_summary(eval.result, "Checking " + test_name) << endl;
   }
 
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_resize(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_resize(
+    bool verbose) {
   Stats result;
 
-  sstream message, failure;
+  sstream message;
 
   const auto &test_name = "HKL::Region::resize"s;
 
   message << "\n~~~ Checking " << test_name << "\n";
-
-  //      {{":5-10/-", ":1-5/-"}, {-5, 4, 1}}, {{":5-10/-", ":1-5/-"}, {-5, 5,
-  //      1}},
-  //      {{":1-10/-", ":5/-"}, {-5, -4, 1}},
 
   vector<RegionResize> resize_tests{
       {{{":0"}, 1, -1, false}, ":0"},
@@ -277,19 +258,44 @@ TestHKL::TestRegion::check_region_resize(bool verbose) {
   };
 
   Evaluator eval(test_name, resize_tests);
-
-  result(eval.verify(message, failure));
-
-  message << "\n";
+  result(eval.verify());
 
   if (verbose)
-    cout << message.str();
-  else if (result.hasFailed())
-    cout << failure.str();
+    cout << message.str() << eval.message << "\n";
+  else if (eval.hasFailed())
+    cout << message.str() << eval.failed << "\n";
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 
   return result;
+}
+
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_slice(
+    bool verbose) {
+  sstream message;
+
+  const auto &test_name = "HKL::Region::slice"s;
+
+  message << "\n~~~ Checking " << test_name << "\n";
+
+  vector<RegionSlice> tests{
+      {{"", 0, 0}, "None"},       {{":0", 0, 0}, "None"},
+      {{":1-10", 0, 0}, ":1-10"}, {{":1-10", 0, 2}, ":1-2"},
+      {{":1-10", 2, 2}, ":3-4"},  {{":1-10", 2, 0}, ":3-10"},
+      {{":1-10", 2, 9}, ":3-10"}, {{":1-10", 10, 0}, "None"},
+  };
+
+  Evaluator eval(test_name, tests);
+  eval.verify();
+
+  if (verbose)
+    cout << message.str() << eval.message << "\n";
+  else if (eval.hasFailed())
+    cout << message.str() << eval.failed << "\n";
+
+  cout << "~~~ " << gen_summary(eval.result, "Checking " + test_name) << endl;
+
+  return eval.result;
 }
 
 TestHKL::TestRegion::RegionConstructors::RegionConstructors()
@@ -323,6 +329,12 @@ TestHKL::TestRegion::RegionPaired::RegionPaired(InputPairRegionEval input,
 
 TestHKL::TestRegion::RegionResize::RegionResize(InputRegionResize input,
                                                 string expected)
+    : BaseTest(input, expected) {
+  validate();
+}
+
+TestHKL::TestRegion::RegionSlice::RegionSlice(InputRegionSlice input,
+                                              string expected)
     : BaseTest(input, expected) {
   validate();
 }

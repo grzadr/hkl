@@ -11,6 +11,29 @@ if (NOT HEADER_INSTALL_PREFIX)
     set(HEADER_INSTALL_PREFIX "/usr/local" CACHE PATH "..." FORCE)
 endif()
 
+include(CTest)
+
+add_executable(TestHKL
+  test/src/test_hkl.cpp
+  test/src/test_region.cpp
+  test/src/test_regionseq.cpp)
+target_include_directories(TestHKL
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/test/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
+)
+target_compile_features(TestHKL PRIVATE cxx_std_17)
+
+#add_test(Test TestHKL)
+add_test(NAME "Test" COMMAND TestHKL)
+set_tests_properties(Test PROPERTIES WORKING_DIRECTORY
+  ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_custom_command(TARGET TestHKL
+                   POST_BUILD
+                   COMMAND "ctest" "--output-on-failure")
+
 add_subdirectory(agizmo/pybind11)
 pybind11_add_module(pyHKL src/pyhkl.cpp)
 target_include_directories(pyHKL
@@ -27,26 +50,3 @@ target_compile_options(pyHKL PRIVATE -march=x86-64 -mtune=native -O3 -g0
 target_compile_features(pyHKL PRIVATE cxx_std_17)
 install(TARGETS pyHKL LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)
-
-include(CTest)
-
-add_executable(TestHKL test/src/test_hkl.cpp test/src/test_region.cpp test/src/test_regionseq.cpp)
-target_include_directories(TestHKL
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/test/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
-)
-target_compile_features(TestHKL PRIVATE cxx_std_17)
-# target_compile_options(BasicTest PRIVATE -g -march=x86-64 -mtune=native -O3 -g0
-# 				       -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
-# 				       -fvisibility=hidden -Werror -Wall -pthread)
-
-#add_test(Test TestHKL)
-add_test(NAME "Test" COMMAND TestHKL)
-set_tests_properties(Test PROPERTIES WORKING_DIRECTORY
-  ${CMAKE_CURRENT_SOURCE_DIR})
-
-#add_custom_command(TARGET TestHKL
-#                   POST_BUILD
-#                   COMMAND "ctest" "--output-on-failure")
