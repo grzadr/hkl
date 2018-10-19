@@ -14,7 +14,7 @@ Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
   vector<RegionConstructors> contructor_tests{
       {{""}, ":0"},
       {{":0"}, ":0"},
-      {{"", "0", "0", "0"}, ":0"},
+      {{"", "0", "0", "0"}, ":01"},
       {{"", "0", "0", ""}, ":0"},
       {{"", "", "", "+"}, ":0/+"},
       {{"A:1-2/+"}, "A:1-2/+"},
@@ -34,7 +34,8 @@ Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
   if (verbose)
     cout << message.str();
   else if (result.hasFailed())
-    cout << failure.str();
+    cout << remove_passed(message.str()) << endl;
+  //    cout << failure.str();
 
   cout << "~~~ " << gen_summary(result, "Checking " + test_name) << endl;
 

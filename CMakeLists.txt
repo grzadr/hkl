@@ -47,6 +47,6 @@ add_test(NAME "Test" COMMAND TestHKL)
 set_tests_properties(Test PROPERTIES WORKING_DIRECTORY
   ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_custom_command(TARGET TestHKL
-                   POST_BUILD
-                   COMMAND "ctest" "--output-on-failure")
+#add_custom_command(TARGET TestHKL
+#                   POST_BUILD
+#                   COMMAND "ctest" "--output-on-failure")
