@@ -9,20 +9,10 @@
 #include "agizmo/basic.hpp"
 #include "agizmo/strings.hpp"
 
-// using std::abs;
-// using std::map;
-// using std::max;
-// using std::min;
-// using std::optional;
-// using std::ostream;
-// using std::pair;
-// using std::string;
-// using std::to_string;
-
-// using namespace ComTol;
-// using namespace ComTol::StrTol;
-
 namespace HKL {
+
+using std::cout;
+using std::endl;
 
 using std::back_inserter;
 using std::pair;
@@ -58,22 +48,21 @@ enum class RegionErrorType {
 using RET = RegionErrorType;
 
 class RegionError : public std::exception {
- private:
+private:
   string query{};
   string message{};
   RET type{RET::None};
 
   void genMessage() {
-    this->message =
-        "\n######### REGION ERROR #########\n"
-        "    Name: " +
-        this->getName() +
-        "\n"
-        "   Query: " +
-        this->query + "\n";
+    this->message = "\n######### REGION ERROR #########\n"
+                    "    Name: " +
+                    this->getName() +
+                    "\n"
+                    "   Query: " +
+                    this->query + "\n";
   }
 
- public:
+public:
   RegionError() = default;
   virtual ~RegionError() override = default;
   RegionError(RET type, string query) : type{type} {
@@ -106,22 +95,22 @@ class RegionError : public std::exception {
   const RET &getType() const { return this->type; }
   string getName() const {
     switch (this->type) {
-      case RET::None:
-        return "None";
-      case RET::ChrFormat:
-        return "ChrFormat";
-      case RET::PosMissing:
-        return "PosMissing";
-      case RET::PosFormat:
-        return "PosFormat";
-      case RET::PosRange:
-        return "PosRange";
-      case RET::StrandMissing:
-        return "StrandMissing";
-      case RET::StrandFormat:
-        return "StrandFormat";
-      default:
-        throw std::runtime_error("Unknown Error\n");
+    case RET::None:
+      return "None";
+    case RET::ChrFormat:
+      return "ChrFormat";
+    case RET::PosMissing:
+      return "PosMissing";
+    case RET::PosFormat:
+      return "PosFormat";
+    case RET::PosRange:
+      return "PosRange";
+    case RET::StrandMissing:
+      return "StrandMissing";
+    case RET::StrandFormat:
+      return "StrandFormat";
+    default:
+      throw std::runtime_error("Unknown Error\n");
     }
   }
   virtual inline const char *what() const noexcept override {
@@ -130,7 +119,7 @@ class RegionError : public std::exception {
 };
 
 class Region {
- private:
+private:
   string chrom{""};
   int first{0};
   int last{0};
@@ -148,13 +137,10 @@ class Region {
 
   template <typename T>
   T calcPosRel(T pos, bool orient = false) const noexcept {
-    if (orient && this->strand == '-')
-      return this->last - pos;
-    else
-      return pos - this->first;
+    return calcPosRel(this->first, this->last, pos, orient ? this->strand : 0);
   }
 
- public:
+public:
   Region() = default;
 
   Region(string query) {
@@ -275,7 +261,8 @@ class Region {
   }
 
   void setRange(int first, int last = 0) {
-    if (first < 0 || last < 0) throw RegionError{RET::PosFormat, first, last};
+    if (first < 0 || last < 0)
+      throw RegionError{RET::PosFormat, first, last};
 
     if (last) {
       if (!first || last < first)
@@ -291,30 +278,31 @@ class Region {
     this->setRange(range.first, range.second);
   }
   void setRange(string coord) {
-    if (!coord.size()) this->setRange(0);
+    if (!coord.size())
+      this->setRange(0);
 
     switch (count_all(coord, '-')) {
-      case 0:
-        if (auto first = str_to_int(coord))
-          this->setRange(*first);
-        else
-          throw RegionError(RET::PosFormat, coord);
-        break;
-      case 1: {
-        auto mark_pos = coord.find("-");
+    case 0:
+      if (auto first = str_to_int(coord))
+        this->setRange(*first);
+      else
+        throw RegionError(RET::PosFormat, coord);
+      break;
+    case 1: {
+      auto mark_pos = coord.find("-");
 
-        if (!mark_pos || mark_pos == coord.length() - 1)
-          throw RegionError(RET::PosMissing, coord);
+      if (!mark_pos || mark_pos == coord.length() - 1)
+        throw RegionError(RET::PosMissing, coord);
 
-        if (auto first = str_to_int(coord.substr(0, mark_pos));
-            auto last = str_to_int(coord.substr(mark_pos + 1)))
-          this->setRange(*first, *last);
-        else
-          throw RegionError(RET::PosFormat, coord);
-        break;
-      }
-      default:
-        throw RegionError{RET::PosFormat, coord};
+      if (auto first = str_to_int(coord.substr(0, mark_pos));
+          auto last = str_to_int(coord.substr(mark_pos + 1)))
+        this->setRange(*first, *last);
+      else
+        throw RegionError(RET::PosFormat, coord);
+      break;
+    }
+    default:
+      throw RegionError{RET::PosFormat, coord};
     }
   }
 
@@ -325,27 +313,27 @@ class Region {
 
   void setStrand(char strand) {
     switch (strand) {
-      case 0:
-      case '0':
-        this->strand = 0;
-        break;
-      case '+':
-      case '1':
-      case 'F':
-      case 'f':
-      case 'P':
-      case 'p':
-        this->strand = '+';
-        break;
-      case '-':
-      case 'R':
-      case 'r':
-      case 'N':
-      case 'n':
-        this->strand = '-';
-        break;
-      default:
-        throw RegionError{RET::StrandFormat, strand};
+    case 0:
+    case '0':
+      this->strand = 0;
+      break;
+    case '+':
+    case '1':
+    case 'F':
+    case 'f':
+    case 'P':
+    case 'p':
+      this->strand = '+';
+      break;
+    case '-':
+    case 'R':
+    case 'r':
+    case 'N':
+    case 'n':
+      this->strand = '-';
+      break;
+    default:
+      throw RegionError{RET::StrandFormat, strand};
     }
   }
   void setStrand(string strand = "") {
@@ -360,7 +348,8 @@ class Region {
   }
 
   void resize(int upstream, int downstream, bool orient = true) {
-    if (this->isEmpty()) return;
+    if (this->isEmpty())
+      return;
 
     int temp_first = this->first;
     int temp_last = this->last;
@@ -373,8 +362,10 @@ class Region {
       temp_last += downstream;
     }
 
-    if (temp_first < 1) temp_first = 1;
-    if (temp_last < 1) temp_last = 0;
+    if (temp_first < 1)
+      temp_first = 1;
+    if (temp_last < 1)
+      temp_last = 0;
 
     if (temp_first > temp_last)
       this->setRange(0, 0);
@@ -399,7 +390,11 @@ class Region {
   int getFirst() const { return this->first; }
   int getLast() const { return this->last; }
 
-  double getCenter() const noexcept { return (this->first + this->last) / 2.0; }
+  static double calcCenter(int first, int last) { return (first + last) / 2.0; }
+  double getCenter() const noexcept {
+    return calcCenter(this->first, this->last);
+  }
+
   pair<int, int> getRange() const { return {this->first, this->last}; }
 
   char getStrand() const { return this->strand; }
@@ -422,39 +417,81 @@ class Region {
            (!this->strand ? "" : ("/" + string(1, this->strand)));
   }
 
+  static bool checkSameChrom(const string reference, const string query) {
+    return reference == query;
+  }
   bool sameChrom(const Region &other) const {
-    return this->chrom == other.chrom;
+    return checkSameChrom(this->chrom, other.chrom);
   }
   bool sharesChrom(const Region &other) const {
     return (!this->isEmpty() && !other.isEmpty() &&
             (this->isPure() || other.isPure() || this->sameChrom(other)));
   }
 
+  static bool checkSameRange(int reference_first, int reference_last,
+                             int query_first, int query_last) {
+    return reference_first == query_first && reference_last == query_last;
+  }
   bool sameRange(const Region &other) const {
-    return this->first == other.first && this->last == other.last;
-  }
-  bool sharesRange(const Region &other) const {
-    return !(this->first > other.last || this->last < other.first);
-  }
-  bool sharesPos(int pos) const {
-    return !(this->first > pos || this->last < pos);
+    return checkSameRange(this->first, this->last, other.first, other.last);
   }
 
+  static bool checkSharesRange(int reference_first, int reference_last,
+                               int query_first, int query_last) {
+    return !(reference_first > query_last || reference_last < query_first);
+  }
+  bool sharesRange(const Region &other) const {
+    return checkSharesRange(this->first, this->last, other.first, other.last);
+  }
+
+  static bool checkSharesPos(int first, int last, int pos) {
+    return !(first > pos || last < pos);
+  }
+  bool sharesPos(int pos) const {
+    return checkSharesPos(this->first, this->last, pos);
+  }
+
+  static bool checkSameStrand(char reference, char query) {
+    return reference == query;
+  }
   bool sameStrand(const Region &other) const {
-    return this->strand == other.strand;
+    return checkSameStrand(this->strand, other.strand);
+  }
+
+  static bool checkSharesStrand(char reference, char query) {
+    return checkSameStrand(reference, query) || XOR(reference, query);
   }
   bool sharesStrand(const Region &other) const {
-    return this->sameStrand(other) || XOR(this->strand, other.strand);
+    return checkSharesStrand(this->strand, other.strand);
+  }
+
+  static int calcDistance(int reference_first, int reference_last,
+                          int query_first, int query_last) {
+    if (checkSharesRange(reference_first, reference_last, query_first,
+                         query_last))
+      return 0;
+    else
+      return reference_first > query_last ? query_last - reference_first
+                                          : query_first - reference_last;
+  }
+
+  static int calcDistance(int reference_first, int reference_last,
+                          int query_first, int query_last,
+                          char reference_strand) {
+    auto dist =
+        calcDistance(reference_first, reference_last, query_first, query_last);
+    return reference_strand == '-' ? -dist : dist;
   }
 
   opt_int dist(const Region &other, bool orient = false) const {
-    if (!this->sharesChrom(other)) return nullopt;
-    if (this->sharesRange(other)) return 0;
+    if (!this->sharesChrom(other))
+      return nullopt;
 
-    int dist = this->first > other.last ? other.last - this->first
-                                        : other.first - this->last;
-
-    return (orient && this->strand == '-') ? -dist : dist;
+    if (orient)
+      return calcDistance(this->first, this->last, other.first, other.last,
+                          this->strand);
+    else
+      return calcDistance(this->first, this->last, other.first, other.last);
   }
 
   bool shares(const Region &other) const {
@@ -470,9 +507,13 @@ class Region {
       return false;
   }
 
+  static bool checkInside(int reference_first, int reference_last,
+                          int query_first, int query_last) {
+    return !(reference_first < query_first || reference_last > query_last);
+  }
   bool inside(const Region &other) const {
     return (this->sharesChrom(other) &&
-            !(this->first < other.first || this->last > other.last));
+            checkInside(this->first, this->last, other.first, other.last));
   }
   bool covers(const Region &other) const { return other.inside(*this); }
 
@@ -489,13 +530,17 @@ class Region {
       return false;
   }
 
-  template <typename T = int>
-  optional<T> getPosRel(const Region &other, T pos = T{0},
-                        bool orient = false) const noexcept {
-    if (!this->sharesChrom(other) or pos < 0)
-      return nullopt;
+  template <class Ref, class Pos>
+  static Pos calcPosRel(Ref ref, Pos pos) noexcept {
+    return pos - ref;
+  }
+
+  template <class Ref, class Pos>
+  static Pos calcPosRel(Ref first, Ref last, Pos pos, char strand) noexcept {
+    if (strand == '-')
+      return calcPosRel(pos, last);
     else
-      return other.calcPosRel((pos ? pos : this->first), orient);
+      return calcPosRel(first, pos);
   }
 
   template <typename T>
@@ -503,21 +548,37 @@ class Region {
     if (pos <= 0)
       return nullopt;
     else
-      return this->calcPosRel(pos, orient);
+      return calcPosRel(this->first, this->last, pos,
+                        orient ? this->strand : 0);
   }
 
-  template <typename T = int>
-  opt_double getPosRelRatio(const Region &other, T pos = T{0},
-                            bool orient = false) const noexcept {
-    if (auto pos_rel = this->getPosRel(other, pos, orient)) {
-      if (*pos_rel < 0 or size_t(*pos_rel) >= other.length)
-        return nullopt;
-      else if (other.isPos())
-        return *pos_rel;
-      else
-        return *pos_rel / (other.length - 1.0);
-    } else
+  optional<int> getPosRel(const Region &other, bool orient = false) const
+      noexcept {
+    if (!this->sharesChrom(other))
       return nullopt;
+    else
+      //      return other.calcPosRel((pos ? pos : this->first), orient);
+      return this->getPosRel(other.first, orient);
+    //      return other.calcPosRel(this->first, orient);
+  }
+
+  template <typename T>
+  optional<T> getPosRelLast(T pos, bool orient = false) const noexcept {
+    if (pos <= 0)
+      return nullopt;
+    else
+      return calcPosRel(this->last, this->first, pos,
+                        orient ? this->strand : 0);
+  }
+
+  optional<int> getPosRelLast(const Region &other, bool orient = false) const
+      noexcept {
+    if (!this->sharesChrom(other))
+      return nullopt;
+    else
+      //      return other.calcPosRel((pos ? pos : this->first), orient);
+      return this->getPosRelLast(other.first, orient);
+    //      return other.calcPosRel(this->first, orient);
   }
 
   template <typename T>
@@ -527,6 +588,20 @@ class Region {
         return nullopt;
       else
         return *pos_rel / (this->length - 1.0);
+    } else
+      return nullopt;
+  }
+
+  template <typename T = int>
+  opt_double getPosRelRatio(const Region &other, T pos = T{0},
+                            bool orient = false) const noexcept {
+    if (auto pos_rel = this->getPosRel(other, orient)) {
+      if (*pos_rel < 0 or size_t(*pos_rel) >= other.length)
+        return nullopt;
+      else if (other.isPos())
+        return *pos_rel;
+      else
+        return *pos_rel / (other.length - 1.0);
     } else
       return nullopt;
   }
@@ -569,18 +644,17 @@ class Region {
   opt_region getGap(const Region &other) const {
     if (auto dist = this->dist(other)) {
       switch (abs(*dist)) {
-        case 0:
-          return nullopt;
-        case 1:
-          return Region(this->getChrom(other),
-                        string(1, this->getStrand(other)));
-        default:
-          if (this->first < other.first)
-            return Region(this->getChrom(other), this->last + 1,
-                          other.first - 1, this->getStrand(other));
-          else
-            return Region(this->getChrom(other), other.last + 1,
-                          this->first - 1, this->getStrand(other));
+      case 0:
+        return nullopt;
+      case 1:
+        return Region(this->getChrom(other), string(1, this->getStrand(other)));
+      default:
+        if (this->first < other.first)
+          return Region(this->getChrom(other), this->last + 1, other.first - 1,
+                        this->getStrand(other));
+        else
+          return Region(this->getChrom(other), other.last + 1, this->first - 1,
+                        this->getStrand(other));
       }
     } else
       return nullopt;
@@ -595,13 +669,14 @@ class Region {
       return nullopt;
   }
 
-  template <class Output>
-  Output genSlices(size_t length, Output out) const {
-    if (this->isEmpty()) return out;
+  template <class Output> Output genSlices(size_t length, Output out) const {
+    if (this->isEmpty())
+      return out;
 
     for (int start = 0, end = static_cast<int>(this->length); start < end;
          start += length)
-      if (auto slice = this->getSlice(start, length)) *out++ = *slice;
+      if (auto slice = this->getSlice(start, length))
+        *out++ = *slice;
 
     return out;
   }
@@ -635,13 +710,12 @@ class Region {
   }
 };
 
-}  // namespace HKL
+} // namespace HKL
 
 namespace std {
-template <>
-struct hash<HKL::Region> {
+template <> struct hash<HKL::Region> {
   std::size_t operator()(const HKL::Region &r) const {
     return std::hash<std::string>{}(r.str());
   }
 };
-}  // namespace std
+} // namespace std

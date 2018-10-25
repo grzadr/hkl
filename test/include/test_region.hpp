@@ -29,7 +29,7 @@ using HKL::RegionError;
 using Printable::PrintableOptional;
 
 class InputRegionArgs {
- private:
+private:
   opt_int first, last;
   opt_str chrom, strand;
   //  int first{-1}, last{-1};
@@ -47,7 +47,7 @@ class InputRegionArgs {
 
   ConstructorMode mode{};
 
- public:
+public:
   InputRegionArgs() = default;
   InputRegionArgs(string query) {
     if (query != "NA") {
@@ -58,8 +58,10 @@ class InputRegionArgs {
   }
 
   InputRegionArgs(string chrom, string first, string last, string strand) {
-    if (chrom != "NA") this->chrom = chrom;
-    if (strand != "NA") this->strand = strand;
+    if (chrom != "NA")
+      this->chrom = chrom;
+    if (strand != "NA")
+      this->strand = strand;
     this->first = StringFormat::str_to_int(first, true);
     this->last = StringFormat::str_to_int(last, true);
 
@@ -93,30 +95,29 @@ class InputRegionArgs {
   string str() const {
     sstream message;
     switch (mode) {
-      case ConstructorMode::Default:
-        break;
-      case ConstructorMode::SingleString:
-        message << quoted(chrom.value_or(""));
-        break;
-      case ConstructorMode::ChromWithStrand:
-        message << quoted(chrom.value_or("")) << ", "
-                << quoted(strand.value_or(""));
-        break;
-      case ConstructorMode::Position:
-        message << *first << ", " << quoted(strand.value_or(""));
-        break;
-      case ConstructorMode::Range:
-        message << *first << ", " << *last << ", "
-                << quoted(strand.value_or(""));
-        break;
-      case ConstructorMode::ChromWithPosition:
-        message << quoted(chrom.value_or("")) << ", " << *first << ", "
-                << quoted(strand.value_or(""));
-        break;
-      case ConstructorMode::ChromWithRange:
-        message << quoted(chrom.value_or("")) << ", " << *first << ", " << *last
-                << ", " << quoted(strand.value_or(""));
-        break;
+    case ConstructorMode::Default:
+      break;
+    case ConstructorMode::SingleString:
+      message << quoted(chrom.value_or(""));
+      break;
+    case ConstructorMode::ChromWithStrand:
+      message << quoted(chrom.value_or("")) << ", "
+              << quoted(strand.value_or(""));
+      break;
+    case ConstructorMode::Position:
+      message << *first << ", " << quoted(strand.value_or(""));
+      break;
+    case ConstructorMode::Range:
+      message << *first << ", " << *last << ", " << quoted(strand.value_or(""));
+      break;
+    case ConstructorMode::ChromWithPosition:
+      message << quoted(chrom.value_or("")) << ", " << *first << ", "
+              << quoted(strand.value_or(""));
+      break;
+    case ConstructorMode::ChromWithRange:
+      message << quoted(chrom.value_or("")) << ", " << *first << ", " << *last
+              << ", " << quoted(strand.value_or(""));
+      break;
     }
 
     return message.str();
@@ -128,26 +129,27 @@ class InputRegionArgs {
 
   Region construct() const {
     switch (mode) {
-      case ConstructorMode::Default:
-        return Region();
-      case ConstructorMode::SingleString:
-        return Region(*chrom);
-      case ConstructorMode::ChromWithStrand:
-        return Region(chrom.value_or(""), strand.value_or(""));
-      case ConstructorMode::Position:
-        return Region(*first, strand.value_or(""));
-      case ConstructorMode::Range:
-        return Region(*first, *last, strand.value_or(""));
-      case ConstructorMode::ChromWithPosition:
-        return Region(chrom.value_or(""), *first, strand.value_or(""));
-      case ConstructorMode::ChromWithRange:
-        return Region(chrom.value_or(""), *first, *last, strand.value_or(""));
+    case ConstructorMode::Default:
+      return Region();
+    case ConstructorMode::SingleString:
+      return Region(*chrom);
+    case ConstructorMode::ChromWithStrand:
+      return Region(chrom.value_or(""), strand.value_or(""));
+    case ConstructorMode::Position:
+      return Region(*first, strand.value_or(""));
+    case ConstructorMode::Range:
+      return Region(*first, *last, strand.value_or(""));
+    case ConstructorMode::ChromWithPosition:
+      return Region(chrom.value_or(""), *first, strand.value_or(""));
+    case ConstructorMode::ChromWithRange:
+      return Region(chrom.value_or(""), *first, *last, strand.value_or(""));
     }
+    return Region();
   }
 };
 
 class RegionConstructors : public BaseTest<InputRegionArgs, string> {
- public:
+public:
   RegionConstructors();
   RegionConstructors(InputRegionArgs input, string expected);
 
@@ -164,12 +166,12 @@ class RegionConstructors : public BaseTest<InputRegionArgs, string> {
 };
 
 class InputSingleRegionEval {
- private:
+private:
   int id;
   InputRegionArgs args;
   string function;
 
- public:
+public:
   InputSingleRegionEval() = default;
   InputSingleRegionEval(int id, InputRegionArgs args, string function)
       : id{id}, args{args}, function{function} {}
@@ -208,13 +210,14 @@ class InputSingleRegionEval {
   string str() const {
     sstream result;
     result << " " << id << " (" << args.str() << ")";
-    if (!function.empty()) result << "." << function << "()";
+    if (!function.empty())
+      result << "." << function << "()";
     return result.str();
   }
 };
 
 class RegionFormation : public BaseTest<InputSingleRegionEval, string> {
- public:
+public:
   RegionFormation() = default;
   RegionFormation(InputSingleRegionEval input, string expected);
 
@@ -231,7 +234,7 @@ class RegionFormation : public BaseTest<InputSingleRegionEval, string> {
 };
 
 class RegionFailure : public BaseTest<InputRegionArgs, string> {
- public:
+public:
   RegionFailure();
   RegionFailure(InputRegionArgs input, string expected);
 
@@ -252,12 +255,12 @@ class RegionFailure : public BaseTest<InputRegionArgs, string> {
 };
 
 class InputPairRegionEval {
- private:
+private:
   int id;
   InputRegionArgs args_ref, args_query;
   string function;
 
- public:
+public:
   InputPairRegionEval() = default;
   InputPairRegionEval(int id, InputRegionArgs ref, InputRegionArgs query,
                       string function)
@@ -307,30 +310,29 @@ class InputPairRegionEval {
     else if (function == "getDistS")
       result << PrintableOptional(ref.dist(query, true));
     else if (function == "getRelPosFirst")
-      result << PrintableOptional(ref.getPosRel(query, ref.getFirst()));
-    else if (function == "getRelPosRatioFirst")
+      result << PrintableOptional(ref.getPosRel(query));
+    else if (function == "getRelPosFirstRatio")
       result << PrintableOptional(ref.getPosRelRatio(query, ref.getFirst()));
     else if (function == "getRelPosFirstS")
-      result << PrintableOptional(ref.getPosRel(query, ref.getFirst(), true));
-    else if (function == "getRelPosRatioFirstS")
+      result << PrintableOptional(ref.getPosRel(query, true));
+    else if (function == "getRelPosFirstRatioS")
       result << PrintableOptional(
           ref.getPosRelRatio(query, ref.getFirst(), true));
     else if (function == "getRelPosCenter")
-      result << PrintableOptional(ref.getPosRel(query, ref.getCenter()));
-    else if (function == "getRelPosRatioCenter")
+      result << PrintableOptional(ref.getPosRel(query.getCenter()));
+    else if (function == "getRelPosCenterRatio")
       result << PrintableOptional(ref.getPosRelRatio(query, ref.getCenter()));
     else if (function == "getRelPosCenterS")
-      result << PrintableOptional(ref.getPosRel(query, ref.getCenter(), true));
-    else if (function == "getRelPosRatioCenterS")
-      result << PrintableOptional(
-          ref.getPosRelRatio(query, ref.getCenter(), true));
+      result << PrintableOptional(query.getPosRel(ref.getCenter(), true));
+    else if (function == "getRelPosCenterRatioS")
+      result << PrintableOptional(query.getPosRelRatio(ref.getCenter(), true));
     else if (function == "getRelPosLast")
-      result << PrintableOptional(ref.getPosRel(query, ref.getLast()));
-    else if (function == "getRelPosRatioLast")
+      result << PrintableOptional(ref.getPosRelLast(query));
+    else if (function == "getRelPosLastRatio")
       result << PrintableOptional(ref.getPosRelRatio(query, ref.getLast()));
     else if (function == "getRelPosLastS")
-      result << PrintableOptional(ref.getPosRel(query, ref.getLast(), true));
-    else if (function == "getRelPosRatioLastS")
+      result << PrintableOptional(ref.getPosRelLast(query, true));
+    else if (function == "getRelPosLastRatioS")
       result << PrintableOptional(
           ref.getPosRelRatio(query, ref.getLast(), true));
     else if (function == "getShared")
@@ -363,7 +365,7 @@ class InputPairRegionEval {
 };
 
 class RegionPaired : public BaseTest<InputPairRegionEval, string> {
- public:
+public:
   RegionPaired() = default;
   RegionPaired(InputPairRegionEval input, string expected);
 
@@ -380,19 +382,17 @@ class RegionPaired : public BaseTest<InputPairRegionEval, string> {
 };
 
 class InputRegionResize {
- private:
+private:
   InputRegionArgs args;
   int upstream, downstream;
   bool orient;
 
- public:
+public:
   InputRegionResize() = default;
   InputRegionResize(InputRegionArgs args, int upstream, int downstream,
                     bool orient)
-      : args{args},
-        upstream{upstream},
-        downstream{downstream},
-        orient{orient} {}
+      : args{args}, upstream{upstream}, downstream{downstream}, orient{orient} {
+  }
 
   string str() const {
     sstream result;
@@ -411,7 +411,7 @@ class InputRegionResize {
 };
 
 class RegionResize : public BaseTest<InputRegionResize, string> {
- public:
+public:
   RegionResize() = default;
   RegionResize(InputRegionResize input, string expected);
 
@@ -428,12 +428,12 @@ class RegionResize : public BaseTest<InputRegionResize, string> {
 };
 
 class InputRegionSlice {
- private:
+private:
   InputRegionArgs ref;
   int pos;
   size_t length;
 
- public:
+public:
   InputRegionSlice(string ref, int pos, size_t length)
       : ref{ref}, pos{pos}, length{length} {}
 
@@ -452,7 +452,7 @@ class InputRegionSlice {
 };
 
 class RegionSlice : public BaseTest<InputRegionSlice, string> {
- public:
+public:
   RegionSlice() = default;
   RegionSlice(InputRegionSlice input, string expected);
 
@@ -474,4 +474,4 @@ Stats check_region_failure(bool verbose);
 Stats check_region_paired(bool verbose);
 Stats check_region_resize(bool verbose);
 Stats check_region_slice(bool verbose);
-}  // namespace TestHKL::TestRegion
+} // namespace TestHKL::TestRegion
