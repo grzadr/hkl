@@ -34,19 +34,19 @@ add_custom_command(TARGET TestHKL
                    POST_BUILD
                    COMMAND "ctest" "--output-on-failure")
 
-#add_subdirectory(agizmo/pybind11)
-#pybind11_add_module(pyHKL src/pyhkl.cpp)
-#target_include_directories(pyHKL
-#    PUBLIC
-#        $<INSTALL_INTERFACE:include>
-#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#    PRIVATE
-#        ${CMAKE_CURRENT_SOURCE_DIR}/src
-#        ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
-#)
-#target_compile_options(pyHKL PRIVATE -march=x86-64 -mtune=native -O3 -g0
-#                       -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
-#                       -fvisibility=hidden -Werror -Wall -pthread)
-#target_compile_features(pyHKL PRIVATE cxx_std_17)
-#install(TARGETS pyHKL LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
-#install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)
+add_subdirectory(agizmo/pybind11)
+pybind11_add_module(pyHKL src/pyhkl.cpp)
+target_include_directories(pyHKL
+    PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
+)
+target_compile_options(pyHKL PRIVATE -march=x86-64 -mtune=native -O3 -g0
+                       -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
+                       -fvisibility=hidden -Werror -Wall -pthread)
+target_compile_features(pyHKL PRIVATE cxx_std_17)
+install(TARGETS pyHKL LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)

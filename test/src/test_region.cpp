@@ -38,8 +38,8 @@ Stats TestHKL::TestRegion::check_region_constructors(bool verbose) {
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_formation(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_formation(
+    bool verbose) {
   Stats result;
 
   sstream message, failure;
@@ -95,8 +95,8 @@ TestHKL::TestRegion::check_region_formation(bool verbose) {
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_failure(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_failure(
+    bool verbose) {
   Stats result;
 
   sstream message, failure;
@@ -142,11 +142,9 @@ Stats TestHKL::TestRegion::check_region_paired(bool verbose) {
   Stats result;
 
   vector<string> files{
-      "special", "basic-normal",
-      //    "basic-mixed",
-      //    "basic-pure",
-      //      "strand-normal",
-      //    "strand-mixed", "strand-pure",
+      "special",    "basic-normal",  "basic-mixed",
+      "basic-pure", "strand-normal", "strand-mixed",
+      //    "strand-pure",
   };
 
   for (const auto &name : files) {
@@ -201,8 +199,8 @@ Stats TestHKL::TestRegion::check_region_paired(bool verbose) {
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_resize(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_resize(
+    bool verbose) {
   Stats result;
 
   sstream message;
@@ -273,8 +271,8 @@ TestHKL::TestRegion::check_region_resize(bool verbose) {
   return result;
 }
 
-AGizmo::Evaluation::Stats
-TestHKL::TestRegion::check_region_slice(bool verbose) {
+AGizmo::Evaluation::Stats TestHKL::TestRegion::check_region_slice(
+    bool verbose) {
   sstream message;
 
   const auto &test_name = "HKL::Region::slice"s;

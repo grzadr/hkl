@@ -137,38 +137,36 @@ PYBIND11_MODULE(pyHKL, m) {
       .def("getCapturedRate", &Region::getCapturedRate, "other"_a)
 
       // Relative positions
-      .def("getPosRel",
-           py::overload_cast<const Region &, int, bool>(&Region::getPosRel<int>,
-                                                        py::const_),
-           "other"_a, "pos"_a = 0, "orient"_a = false)
-      .def("getPosRel",
-           py::overload_cast<int, bool>(&Region::getPosRel<int>, py::const_),
+      .def("getRelPos",
+           py::overload_cast<const Region &, bool, bool>(&Region::getRelPos,
+                                                         py::const_),
+           "other"_a, "orient"_a = false, "last"_a = false)
+      .def("getRelPos",
+           py::overload_cast<int, bool, bool>(&Region::getRelPos, py::const_),
+           "pos"_a, "orient"_a = false, "last"_a = false)
+      .def("getRelPosLast",
+           py::overload_cast<const Region &, bool>(&Region::getRelPosLast,
+                                                   py::const_),
+           "other"_a, "orient"_a = false)
+      .def("getRelPosLast",
+           py::overload_cast<int, bool>(&Region::getRelPosLast, py::const_),
            "pos"_a, "orient"_a = false)
-      .def("getPosRel",
-           py::overload_cast<const Region &, double, bool>(
-               &Region::getPosRel<double>, py::const_),
-           "other"_a, "pos"_a = 0, "orient"_a = false)
-      .def("getPosRel",
-           py::overload_cast<double, bool>(&Region::getPosRel<double>,
-                                           py::const_),
-           "pos"_a, "orient"_a = false)
-
+      .def("getRelPosRatio",
+           py::overload_cast<const Region &, bool, bool>(
+               &Region::getRelPosRatio, py::const_),
+           "other"_a, "orient"_a = false, "last"_a = false)
       .def("getPosRelRatio",
-           py::overload_cast<const Region &, int, bool>(
-               &Region::getPosRelRatio<int>, py::const_),
-           "other"_a, "pos"_a = 0, "orient"_a = false)
-      .def("getPosRelRatio",
-           py::overload_cast<int, bool>(&Region::getPosRelRatio<int>,
-                                        py::const_),
-           "pos"_a, "orient"_a = false)
-      .def("getPosRelRatio",
-           py::overload_cast<const Region &, double, bool>(
-               &Region::getPosRelRatio<double>, py::const_),
-           "other"_a, "pos"_a = 0, "orient"_a = false)
-      .def("getPosRelRatio",
-           py::overload_cast<double, bool>(&Region::getPosRelRatio<double>,
-                                           py::const_),
-           "pos"_a = 0, "orient"_a = false)
+           py::overload_cast<int, bool, bool>(&Region::getRelPosRatio,
+                                              py::const_),
+           "pos"_a, "orient"_a = false, "last"_a = false)
+      .def("getRelPosLastRatio",
+           py::overload_cast<const Region &, bool>(&Region::getRelPosLastRatio,
+                                                   py::const_),
+           "other"_a, "orient"_a = false)
+      .def(
+          "getPosRelRatio",
+          py::overload_cast<int, bool>(&Region::getRelPosLastRatio, py::const_),
+          "pos"_a, "orient"_a = false)
 
       // Python specific
       .def("__repr__",
