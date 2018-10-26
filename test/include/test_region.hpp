@@ -50,7 +50,7 @@ private:
 public:
   InputRegionArgs() = default;
   InputRegionArgs(string query) {
-    if (query != "NA") {
+    if (query != "None") {
       this->chrom = query;
       this->mode = ConstructorMode::SingleString;
     } else
@@ -58,9 +58,9 @@ public:
   }
 
   InputRegionArgs(string chrom, string first, string last, string strand) {
-    if (chrom != "NA")
+    if (chrom != "None")
       this->chrom = chrom;
-    if (strand != "NA")
+    if (strand != "None")
       this->strand = strand;
     this->first = StringFormat::str_to_int(first, true);
     this->last = StringFormat::str_to_int(last, true);
@@ -310,31 +310,29 @@ public:
     else if (function == "getDistS")
       result << PrintableOptional(ref.dist(query, true));
     else if (function == "getRelPosFirst")
-      result << PrintableOptional(ref.getPosRel(query));
+      result << PrintableOptional(ref.getRelPos(query));
     else if (function == "getRelPosFirstRatio")
-      result << PrintableOptional(ref.getPosRelRatio(query, ref.getFirst()));
+      result << PrintableOptional(ref.getRelPosRatio(query));
     else if (function == "getRelPosFirstS")
-      result << PrintableOptional(ref.getPosRel(query, true));
+      result << PrintableOptional(ref.getRelPos(query, true));
     else if (function == "getRelPosFirstRatioS")
-      result << PrintableOptional(
-          ref.getPosRelRatio(query, ref.getFirst(), true));
+      result << PrintableOptional(ref.getRelPosRatio(query, true));
     else if (function == "getRelPosCenter")
-      result << PrintableOptional(ref.getPosRel(query.getCenter()));
+      result << PrintableOptional(ref.getRelPos(query.getCenter()));
     else if (function == "getRelPosCenterRatio")
-      result << PrintableOptional(ref.getPosRelRatio(query, ref.getCenter()));
+      result << PrintableOptional(ref.getRelPosRatio(query));
     else if (function == "getRelPosCenterS")
-      result << PrintableOptional(query.getPosRel(ref.getCenter(), true));
+      result << PrintableOptional(ref.getRelPos(query.getCenter(), true));
     else if (function == "getRelPosCenterRatioS")
-      result << PrintableOptional(query.getPosRelRatio(ref.getCenter(), true));
+      result << PrintableOptional(ref.getRelPosRatio(query.getCenter(), true));
     else if (function == "getRelPosLast")
-      result << PrintableOptional(ref.getPosRelLast(query));
+      result << PrintableOptional(ref.getRelPosLast(query));
     else if (function == "getRelPosLastRatio")
-      result << PrintableOptional(ref.getPosRelRatio(query, ref.getLast()));
+      result << PrintableOptional(ref.getRelPosRatio(query));
     else if (function == "getRelPosLastS")
-      result << PrintableOptional(ref.getPosRelLast(query, true));
+      result << PrintableOptional(ref.getRelPosLast(query, true));
     else if (function == "getRelPosLastRatioS")
-      result << PrintableOptional(
-          ref.getPosRelRatio(query, ref.getLast(), true));
+      result << PrintableOptional(ref.getRelPosRatio(query, true));
     else if (function == "getShared")
       result << PrintableOptional(ref.getShared(query));
     else if (function == "getDiff")

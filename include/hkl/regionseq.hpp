@@ -24,12 +24,12 @@ using std::ifstream;
 using namespace AGizmo;
 
 class RegionSeq {
- private:
+private:
   string name{""};
   string seq{""};
   Region loc = Region();
 
- public:
+public:
   RegionSeq() = default;
 
   RegionSeq(string name, string seq, Region loc = Region()) {
@@ -156,14 +156,15 @@ class RegionSeq {
                              ? this->size() - static_cast<size_t>(abs(first))
                              : static_cast<size_t>(first);
 
-    if (first_t >= this->size()) return "";
+    if (first_t >= this->size())
+      return "";
 
     return this->seq.substr(first_t, length ? length : this->size());
   }
 
   string getSeq(const Region &loc) const noexcept {
     if (auto shared = this->loc.getShared(loc))
-      return this->getSeq((*shared).getPosRel(this->loc).value(),
+      return this->getSeq((this->loc).getRelPos(*shared).value(),
                           (*shared).getLength());
     else
       return "";
@@ -178,7 +179,8 @@ class RegionSeq {
 
   string toFASTA(size_t line = 60, size_t chunk = 0, bool loc = false) const {
     string result = ">" + this->name;
-    if (loc) result += "|" + this->loc.str();
+    if (loc)
+      result += "|" + this->loc.str();
 
     if (!this->isEmpty()) {
       result.reserve(result.size() +
@@ -207,12 +209,13 @@ class RegionSeq {
 };
 
 class FASTAReader {
- private:
+private:
   static void prepareSeq(string &old_name, string &name, string &seq,
                          bool upper) {
     swap(name, old_name);
     seq.erase(std::remove(seq.begin(), seq.end(), ' '), seq.end());
-    if (upper) transform(seq.begin(), seq.end(), seq.begin(), toupper);
+    if (upper)
+      transform(seq.begin(), seq.end(), seq.begin(), toupper);
   }
 
   static string cutFASTAMarker(const string &name) {
@@ -222,7 +225,7 @@ class FASTAReader {
   string file_name, old_name;
   ifstream input;
 
- public:
+public:
   static bool readFASTASeq(ifstream &input, string &old_name, string &name,
                            string &seq, bool upper = false) {
     string line{};
@@ -230,7 +233,8 @@ class FASTAReader {
     seq = {};
 
     while (getline(input, line)) {
-      if (!line.size()) continue;
+      if (!line.size())
+        continue;
 
       if (line.at(0) == '>') {
         name = cutFASTAMarker(line);
@@ -302,4 +306,4 @@ class FASTAReader {
   }
 };
 
-}  // namespace HKL
+} // namespace HKL

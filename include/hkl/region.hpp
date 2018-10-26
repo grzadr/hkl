@@ -135,10 +135,11 @@ private:
       this->length = static_cast<size_t>(this->last - this->first + 1);
   }
 
-  template <typename T>
-  T calcPosRel(T pos, bool orient = false) const noexcept {
-    return calcPosRel(this->first, this->last, pos, orient ? this->strand : 0);
-  }
+  //  template <typename T>
+  //  T calcPosRel(T pos, bool orient = false) const noexcept {
+  //    return calcPosRel(this->first, this->last, pos, orient ? this->strand :
+  //    0);
+  //  }
 
 public:
   Region() = default;
@@ -531,59 +532,58 @@ public:
   }
 
   template <class Ref, class Pos>
-  static Pos calcPosRel(Ref ref, Pos pos) noexcept {
+  static Pos calcRelPos(Ref ref, Pos pos) noexcept {
     return pos - ref;
   }
 
   template <class Ref, class Pos>
-  static Pos calcPosRel(Ref first, Ref last, Pos pos, char strand) noexcept {
+  static Pos calcRelPos(Ref first, Ref last, Pos pos, char strand) noexcept {
     if (strand == '-')
-      return calcPosRel(pos, last);
+      return calcRelPos(pos, last);
     else
-      return calcPosRel(first, pos);
+      return calcRelPos(first, pos);
   }
 
   template <typename T>
-  optional<T> getPosRel(T pos, bool orient = false) const noexcept {
-    if (pos <= 0)
+  optional<T> getRelPos(T pos, bool orient = false, bool last = false) const
+      noexcept {
+    if (this->isEmpty() || pos <= 0)
       return nullopt;
+    else if (last)
+      return calcRelPos(this->last, this->first, pos,
+                        orient ? this->strand : 0);
     else
-      return calcPosRel(this->first, this->last, pos,
+      return calcRelPos(this->first, this->last, pos,
                         orient ? this->strand : 0);
   }
 
-  optional<int> getPosRel(const Region &other, bool orient = false) const
-      noexcept {
-    if (!this->sharesChrom(other))
-      return nullopt;
+  optional<int> getRelPos(const Region &other, bool orient = false,
+                          bool last = false) const noexcept {
+    if (this->sharesChrom(other))
+      if (last)
+        return calcRelPos(this->last, this->first, other.first,
+                          orient ? this->strand : 0);
+      else
+        return calcRelPos(this->first, this->last, other.first,
+                          orient ? this->strand : 0);
     else
-      //      return other.calcPosRel((pos ? pos : this->first), orient);
-      return this->getPosRel(other.first, orient);
-    //      return other.calcPosRel(this->first, orient);
+      return nullopt;
   }
 
   template <typename T>
-  optional<T> getPosRelLast(T pos, bool orient = false) const noexcept {
-    if (pos <= 0)
-      return nullopt;
-    else
-      return calcPosRel(this->last, this->first, pos,
-                        orient ? this->strand : 0);
+  optional<T> getRelPosLast(T pos, bool orient = false) const noexcept {
+    return this->getRelPos(pos, orient, true);
   }
 
-  optional<int> getPosRelLast(const Region &other, bool orient = false) const
+  optional<int> getRelPosLast(const Region &other, bool orient = false) const
       noexcept {
-    if (!this->sharesChrom(other))
-      return nullopt;
-    else
-      //      return other.calcPosRel((pos ? pos : this->first), orient);
-      return this->getPosRelLast(other.first, orient);
-    //      return other.calcPosRel(this->first, orient);
+    return this->getRelPos(other, orient, true);
   }
 
   template <typename T>
-  opt_double getPosRelRatio(T pos, bool orient = false) const noexcept {
-    if (auto pos_rel = this->getPosRel(pos, orient)) {
+  opt_double getRelPosRatio(T pos, bool orient = false) const noexcept {
+    if (auto pos_rel = this->getRelPos(pos, orient)) {
+      cout << *this << " " << pos << " " << *pos_rel << endl;
       if (*pos_rel < 0 or size_t(*pos_rel) >= this->length)
         return nullopt;
       else
@@ -592,16 +592,15 @@ public:
       return nullopt;
   }
 
-  template <typename T = int>
-  opt_double getPosRelRatio(const Region &other, T pos = T{0},
-                            bool orient = false) const noexcept {
-    if (auto pos_rel = this->getPosRel(other, orient)) {
-      if (*pos_rel < 0 or size_t(*pos_rel) >= other.length)
+  opt_double getRelPosRatio(const Region &other, bool orient = false) const
+      noexcept {
+    if (auto pos_rel = this->getRelPos(other, orient)) {
+      if (*pos_rel < 0 or size_t(*pos_rel) >= this->length)
         return nullopt;
-      else if (other.isPos())
+      else if (this->isPos())
         return *pos_rel;
       else
-        return *pos_rel / (other.length - 1.0);
+        return *pos_rel / (this->length - 1.0);
     } else
       return nullopt;
   }

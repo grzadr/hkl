@@ -142,8 +142,11 @@ Stats TestHKL::TestRegion::check_region_paired(bool verbose) {
   Stats result;
 
   vector<string> files{
-      "special",       "basic-normal", "basic-mixed", "basic-pure",
-      "strand-normal", "strand-mixed", "strand-pure",
+      "special", "basic-normal",
+      //    "basic-mixed",
+      //    "basic-pure",
+      //      "strand-normal",
+      //    "strand-mixed", "strand-pure",
   };
 
   for (const auto &name : files) {

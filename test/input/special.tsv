@@ -1,24 +1,24 @@
-ID	Reference	Query	Ope=	Ope<	Ope>	sameChrom	sharesChrom	sameRange	sharesRange	sameStrand	sharesStrand	shares	around	next	inside	covers	upstream	downstream	getDist	getDistS	getShared	getDiff	getUnion	getGap	getSharedLength	getCoveredRate	getCapturedRate	getRelPosFirst	getRelPosFirstRatio	getRelPosFirstS	getRelPosFirstRatioS	getRelPosCenter	getRelPosCenterRatio	getRelPosCenterS	getRelPosCenterRatioS	getRelPosLast	getRelPosLastRatio	getRelPosLastS	getRelPosLastRatioS
-1	:0	:0	1	0	0	1	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-2	:0	1	0	1	0	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-3	1	:0	0	0	1	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-4	:0	1:1	0	1	0	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-5	1:1	:0	0	0	1	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-6	:0	1:1-2	0	1	0	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-7	1:1-2	:0	0	0	1	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-8	1	2	0	1	0	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-9	2	1	0	0	1	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-10	1	1	1	0	0	1	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-11	2	1:1	0	0	1	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-12	1:1	2	0	1	0	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-13	1	1:1	0	1	0	1	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-14	1:1	1	0	0	1	1	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-15	2	1:1-2	0	0	1	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-16	1:1-2	2	0	1	0	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-17	1	1:1-2	0	1	0	1	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-18	1:1-2	1	0	0	1	1	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-19	1:1	2:1	0	1	0	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-20	2:1	1:1	0	0	1	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
-21	:1	:1	1	0	0	1	1	1	1	1	1	1	0	0	1	1	0	0	0	0	:1	:0;:0	:1	None	1	1.000000	1.000000	0	0.000000	0	0.000000	0.000000	0.000000	0.000000	0.000000	0	0.000000	0	0.000000
-22	:1	1:1	0	1	0	0	1	1	1	1	1	1	0	0	1	1	0	0	0	0	:1	:0;:0	:1	None	1	1.000000	1.000000	0	0.000000	0	0.000000	0.000000	0.000000	0.000000	0.000000	0	0.000000	0	0.000000
-23	1:1	:1	0	0	1	0	1	1	1	1	1	1	0	0	1	1	0	0	0	0	:1	:0;:0	:1	None	1	1.000000	1.000000	0	0.000000	0	0.000000	0.000000	0.000000	0.000000	0.000000	0	0.000000	0	0.000000
+ID	Reference	Query	Ope=	Ope<	Ope>	sameChrom	sharesChrom	sameRange	sharesRange	sameStrand	sharesStrand	shares	around	next	inside	covers	upstream	downstream	getDist	getDistS	getShared	getDiff	getUnion	getGap	getSharedLength	getCoveredRate	getCapturedRate	getRelPosFirst	getRelPosFirstRatio	getRelPosFirstS	getRelPosFirstRatioS	getRelPosLast	getRelPosLastRatio	getRelPosLastS	getRelPosLastRatioS
+1	:0	:0	1	0	0	1	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+2	:0	1	0	1	0	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+3	1	:0	0	0	1	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+4	:0	1:1	0	1	0	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+5	1:1	:0	0	0	1	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+6	:0	1:1-2	0	1	0	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+7	1:1-2	:0	0	0	1	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+8	1	2	0	1	0	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+9	2	1	0	0	1	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+10	1	1	1	0	0	1	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+11	2	1:1	0	0	1	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+12	1:1	2	0	1	0	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+13	1	1:1	0	1	0	1	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+14	1:1	1	0	0	1	1	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+15	2	1:1-2	0	0	1	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+16	1:1-2	2	0	1	0	0	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+17	1	1:1-2	0	1	0	1	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+18	1:1-2	1	0	0	1	1	0	0	0	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+19	1:1	2:1	0	1	0	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+20	2:1	1:1	0	0	1	0	0	1	1	1	1	0	0	0	0	0	0	0	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None
+21	:1	:1	1	0	0	1	1	1	1	1	1	1	0	0	1	1	0	0	0	0	:1	:0;:0	:1	None	1	1.000000	1.000000	0	0.000000	0	0.000000	0	0.000000	0	0.000000
+22	:1	1:1	0	1	0	0	1	1	1	1	1	1	0	0	1	1	0	0	0	0	:1	:0;:0	:1	None	1	1.000000	1.000000	0	0.000000	0	0.000000	0	0.000000	0	0.000000
+23	1:1	:1	0	0	1	0	1	1	1	1	1	1	0	0	1	1	0	0	0	0	:1	:0;:0	:1	None	1	1.000000	1.000000	0	0.000000	0	0.000000	0	0.000000	0	0.000000
