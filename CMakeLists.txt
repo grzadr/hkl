@@ -17,7 +17,9 @@ include(CTest)
 add_executable(TestHKL
   test/src/test_hkl.cpp
   test/src/test_region.cpp
-  test/src/test_regionseq.cpp)
+  test/src/test_regionseq.cpp
+  test/src/test_gff.cpp
+)
 target_include_directories(TestHKL
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -33,7 +35,10 @@ set_tests_properties(Test PROPERTIES WORKING_DIRECTORY
 
 add_custom_command(TARGET TestHKL
                    POST_BUILD
-                   COMMAND "ctest" "--output-on-failure")
+                   COMMAND "ctest"
+                   "--verbose"
+#                   "--output-on-failure"
+)
 
 add_subdirectory(agizmo/pybind11)
 pybind11_add_module(pyHKL src/pyhkl.cpp)

@@ -14,6 +14,7 @@ int TestHKL::perform_tests(bool verbose) {
   result(TestRegionSeq::check_basic(verbose));
   result(TestRegionSeq::check_get_seq(verbose));
   result(TestRegionSeq::check_fasta_reader(verbose));
+  result(TestGFF::check_gffreader(verbose));
 
   cout << "\n" << gen_summary(result, "Evaluation", true) << "\n";
 
