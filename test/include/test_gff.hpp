@@ -46,10 +46,7 @@ public:
   OutputGFF execute() const {
     GFFReader reader{file_name};
     while (auto line = reader("#")) {
-      //      cerr << "READ: ";
-      //      visit([](auto const &e) { cerr << e; }, *line);
-      cerr << "\n";
-      //      cerr << *line << "\n";
+      continue;
     }
     return {};
   }
