@@ -51,6 +51,35 @@ class GFFRecord {
   Printable::PrintableStrMap attr{};
 
  public:
+  static constexpr char gff3_escape[]{"\t\n\r%;=&,"};
+
+  static string gff3_str_escape(const string &input) {
+    sstream message;
+    size_t last{0}, pos{input.find_first_of(gff3_escape)};
+
+    if (pos == string::npos) return input;
+
+    do {
+      message << input.substr(last, pos - last);
+      if (pos == string::npos) break;
+      message << "%" << std::hex << std::uppercase << int(input.at(pos));
+      last = pos + 1;
+      pos = input.find_first_of(gff3_escape, last);
+    } while (true);
+
+    return message.str();
+  }
+
+  static string gff3_str_clean(string input) {
+    size_t pos = input.find('%');
+    while (pos != string::npos) {
+      auto ele = char(stoi(input.substr(pos + 1, 2), nullptr, 16));
+      input.replace(pos, 3, 1, ele);
+      pos = input.find('%', pos + 1);
+    }
+    return input;
+  }
+
   GFFRecord() = default;
   GFFRecord(const string &line) {
     //    temp = line;
@@ -60,9 +89,11 @@ class GFFRecord {
 
     auto item = splitted.begin();
 
-    if (const auto &seqid = *item; seqid != ".") this->seqid = seqid;
+    if (const auto &seqid = *item; seqid != ".")
+      this->seqid = gff3_str_clean(seqid);
 
-    if (const auto &source = *(++item); source != ".") this->source = source;
+    if (const auto &source = *(++item); source != ".")
+      this->source = gff3_str_clean(source);
 
     if (const auto &type = *(++item); type != ".") this->type = type;
 
@@ -95,6 +126,9 @@ class GFFRecord {
     }
 
     attr = Printable::PrintableStrMap(splitted.at(8), ';', '=');
+    for (auto &[key, value] : attr) {
+      if (value.has_value()) value = gff3_str_clean(*value);
+    }
   }
 
   string str() const {
@@ -165,7 +199,7 @@ class GFFComment {
     return stream << item.str();
   }
 
-  optional<Region> getRegion() {
+  optional<Region> getRegion() const {
     if (isRegion() && StringSearch::count_all(value, ' ') == 2) {
       const auto chrom_sep = value.find_first_of(' ');
       const auto first_sep = value.find_first_of(' ', chrom_sep + 1);
@@ -179,7 +213,7 @@ class GFFComment {
   }
 };
 
-using gff_variant = variant<GFFRecord, GFFComment>;
+using gff_variant = variant<GFFComment, GFFRecord>;
 
 class GFFReader {
  private:
