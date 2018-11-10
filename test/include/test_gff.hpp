@@ -34,10 +34,10 @@ struct OutputGFF {
 };
 
 class InputGFF {
-private:
+ private:
   string file_name;
 
-public:
+ public:
   InputGFF() = delete;
   InputGFF(string file_name) : file_name{file_name} {}
 
@@ -45,15 +45,13 @@ public:
 
   OutputGFF execute() const {
     GFFReader reader{file_name};
-    while (auto line = reader("#")) {
-      continue;
-    }
+    while (auto record = reader()) continue;
     return {};
   }
 };
 
 class GFFTest : public BaseTest<InputGFF, OutputGFF> {
-public:
+ public:
   GFFTest() = default;
   GFFTest(InputGFF input, OutputGFF expected);
 
@@ -71,4 +69,4 @@ public:
 
 Stats check_gffreader(bool verbose);
 
-} // namespace TestHKL::TestGFF
+}  // namespace TestHKL::TestGFF

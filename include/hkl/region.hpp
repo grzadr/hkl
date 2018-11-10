@@ -88,6 +88,13 @@ class RegionError : public std::exception {
     this->genMessage();
   }
 
+  RegionError(RET type, string chrom, string first, string last, string strand)
+      : type{type} {
+    this->query =
+        "'" + chrom + "', '" + first + "', '" + last + "', '" + strand + "'";
+    this->genMessage();
+  }
+
   RegionError(RET type, char query) : RegionError(type, string(1, query)) {}
 
   RegionError(RET type, string chrom, int first, int last, char strand)
@@ -135,12 +142,6 @@ class Region {
     else
       this->length = static_cast<size_t>(this->last - this->first + 1);
   }
-
-  //  template <typename T>
-  //  T calcPosRel(T pos, bool orient = false) const noexcept {
-  //    return calcPosRel(this->first, this->last, pos, orient ? this->strand :
-  //    0);
-  //  }
 
  public:
   Region() = default;
@@ -212,6 +213,16 @@ class Region {
   Region(int pos, string strand = "") : Region("", pos, pos, strand) {}
 
   Region(string chrom, string strand) : Region(chrom, 0, strand) {}
+
+  Region(string chrom, string first, string last, string strand = {}) {
+    try {
+      setChrom(chrom);
+      setRange(first + "-" + last);
+      setStrand(strand);
+    } catch (const RegionError &ex) {
+      throw RegionError(ex.getType(), chrom, first, last, strand);
+    }
+  }
 
   friend std::ostream &operator<<(ostream &stream, const Region &region) {
     return stream << region.str();

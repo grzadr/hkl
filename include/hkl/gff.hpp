@@ -10,6 +10,8 @@
 #include <agizmo/printable.hpp>
 #include <agizmo/strings.hpp>
 
+#include <hkl/region.hpp>
+
 // uncomment to disable assert()
 // #define NDEBUG
 #include <cassert>
@@ -34,8 +36,8 @@ using opt_char = optional<char>;
 using opt_int = optional<int>;
 
 class GFFRecord {
-private:
-  string temp{};
+ private:
+  //  string temp{};
 
   opt_str seqid{};
   opt_str source{};
@@ -48,24 +50,21 @@ private:
   opt_int phase{};
   Printable::PrintableStrMap attr{};
 
-public:
+ public:
   GFFRecord() = default;
   GFFRecord(const string &line) {
-    temp = line;
+    //    temp = line;
     const auto splitted = StringDecompose::str_split(line, "\t");
 
     assert(splitted.size() == 9);
 
     auto item = splitted.begin();
 
-    if (const auto &seqid = *item; seqid != ".")
-      this->seqid = seqid;
+    if (const auto &seqid = *item; seqid != ".") this->seqid = seqid;
 
-    if (const auto &source = *(++item); source != ".")
-      this->source = source;
+    if (const auto &source = *(++item); source != ".") this->source = source;
 
-    if (const auto &type = *(++item); type != ".")
-      this->type = type;
+    if (const auto &type = *(++item); type != ".") this->type = type;
 
     if (const auto &start = StringFormat::str_to_int(*(++item)))
       this->start = *start;
@@ -79,8 +78,7 @@ public:
 
     length = static_cast<size_t>(end - start + 1);
 
-    if (const auto &score = *(++item); score != ".")
-      this->score = stod(score);
+    if (const auto &score = *(++item); score != ".") this->score = stod(score);
 
     if (const auto &strand = *(++item); strand != ".") {
       if (strand == "-" || strand == "+")
@@ -97,22 +95,6 @@ public:
     }
 
     attr = Printable::PrintableStrMap(splitted.at(8), ';', '=');
-
-    if (const auto &phase = splitted.at(7); phase != ".") {
-      if (const auto int_phase = StringFormat::str_to_int(phase))
-        this->phase = *int_phase;
-      else
-        throw runerror{"Phase field, 8th column, is malformed - " +
-                       splitted.at(7)};
-    }
-
-    if (line != this->str())
-      cerr << "LINE:\t" << line << "\n"
-           << "RECORD:\t" << *this << "\n";
-
-    //    for (const auto &ele : splitted) {
-    //      cerr << ele << "\n";
-    //    }
   }
 
   string str() const {
@@ -145,27 +127,65 @@ public:
 };
 
 class GFFComment {
-private:
-  string temp{};
+ private:
+  string field{}, value{};
+  bool empty{true};
 
-public:
+ public:
   GFFComment() = default;
-  GFFComment(const string &line) : temp{line} {}
+  GFFComment(const string &line) {
+    empty = line.find_last_of('#') == line.size() - 1;
+    if (!isEmpty()) {
+      const auto field_first = line.find_first_not_of('#');
+      const auto field_last = line.find_first_of(' ');
 
-  string str() const { return temp; }
+      field = line.substr(field_first, field_last - field_first);
+      const auto value_first = line.find_first_not_of(' ', field_last);
+
+      value = line.substr(value_first);
+    }
+  }
+
+  bool isEmpty() const { return empty; }
+  bool isMeta() const { return (field[0] == '!'); }
+  bool isRegion() const { return field == "sequence-region"; }
+
+  string str() const {
+    if (isEmpty())
+      return "###";
+    else if (isMeta())
+      return "#" + field + " " + value;
+    else if (isRegion())
+      return "##" + field + "   " + value;
+    else
+      return "##" + field + " " + value;
+  }
 
   friend std::ostream &operator<<(ostream &stream, const GFFComment &item) {
-    return stream << "GFFComment: " << item.str();
+    return stream << item.str();
+  }
+
+  optional<Region> getRegion() {
+    if (isRegion() && StringSearch::count_all(value, ' ') == 2) {
+      const auto chrom_sep = value.find_first_of(' ');
+      const auto first_sep = value.find_first_of(' ', chrom_sep + 1);
+
+      return Region(value.substr(0, chrom_sep),
+                    value.substr(chrom_sep + 1, first_sep - chrom_sep - 1),
+                    value.substr(first_sep + 1));
+    } else {
+      return nullopt;
+    }
   }
 };
 
 using gff_variant = variant<GFFRecord, GFFComment>;
 
 class GFFReader {
-private:
+ private:
   Files::FileReader reader;
 
-public:
+ public:
   GFFReader() = delete;
   GFFReader(const string &file_name) : reader{file_name} {}
 
@@ -186,4 +206,4 @@ public:
   }
 };
 
-} // namespace HKL::GFF
+}  // namespace HKL::GFF
