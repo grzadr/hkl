@@ -42,8 +42,8 @@ class GFFRecord {
   opt_str seqid{};
   opt_str source{};
   opt_str type{};
-  int start{0};
-  int end{0};
+  int range_start{0};
+  int range_end{0};
   size_t length{0};
   opt_double score{};
   opt_char strand{};
@@ -98,16 +98,16 @@ class GFFRecord {
     if (const auto &type = *(++item); type != ".") this->type = type;
 
     if (const auto &start = StringFormat::str_to_int(*(++item)))
-      this->start = *start;
+      this->range_start = *start;
     else
       throw runerror{"Start field, 4th column, is malformed - " + *item};
 
     if (const auto &end = StringFormat::str_to_int(*(++item)))
-      this->end = *end;
+      this->range_end = *end;
     else
       throw runerror{"Start field, 5th column, is malformed - " + *item};
 
-    length = static_cast<size_t>(end - start + 1);
+    length = static_cast<size_t>(range_end - range_start + 1);
 
     if (const auto &score = *(++item); score != ".") this->score = stod(score);
 
@@ -126,15 +126,17 @@ class GFFRecord {
     }
 
     attr = Printable::PrintableStrMap(splitted.at(8), ';', '=');
-    for (auto &[key, value] : attr) {
-      if (value.has_value()) value = gff3_str_clean(*value);
+    for (const auto &key : attr.get_keys()) {
+      if (auto &value = attr[key]; value.has_value())
+        attr[key] = gff3_str_clean(*value);
     }
   }
 
   string str() const {
     sstream output;
     output << seqid.value_or(".") << '\t' << source.value_or(".") << '\t'
-           << type.value_or(".") << '\t' << start << "\t" << end << "\t";
+           << type.value_or(".") << '\t' << range_start << "\t" << range_end
+           << "\t";
     if (const auto &score = this->score) {
       if (*score != 1.0)
         output << StringFormat::str_double(*score, 3, 0);
@@ -157,6 +159,24 @@ class GFFRecord {
 
   friend std::ostream &operator<<(ostream &stream, const GFFRecord &item) {
     return stream << item.str();
+  }
+
+  opt_str get_seqid() const { return seqid; }
+  opt_str get_type() const { return type; }
+  opt_str get_source() const { return source; }
+  int get_start() const { return range_start; }
+  int get_end() const { return range_end; }
+  size_t get_length() const { return length; }
+  opt_double get_score() const { return score; }
+  opt_char get_strand() const { return strand; }
+  opt_int get_phase() const { return phase; }
+
+  auto begin() const noexcept { return attr.begin(); }
+  auto end() const noexcept { return attr.end(); }
+
+  auto at(string key) const { return attr.at(key); }
+  std::optional<opt_str> get(string key) const noexcept {
+    return attr.get(key);
   }
 };
 
