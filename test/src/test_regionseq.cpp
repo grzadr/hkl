@@ -102,21 +102,29 @@ AGizmo::Evaluation::Stats TestHKL::TestRegionSeq::check_fasta_reader(
 
   ++result;
 
-  const auto read = FASTAReader::readFASTAFile("test/input/sequences.fa", true);
+  //  const auto read = FASTAReader::readFASTAFile("test/input/sequences.fa",
+  //  true);
 
-  result.addFailure(read != vector<RegionSeq>{
-                                RegionSeq("SEQ1"),
-                                RegionSeq("SEQ2", "AAAATTTT"),
-                                RegionSeq("SEQ3"),
-                                RegionSeq("SEQ4", "GGGGCCCC"),
-                            });
+  //  result.addFailure(read != vector<RegionSeq>{
+  //                                RegionSeq("SEQ1"),
+  //                                RegionSeq("SEQ2", "AAAATTTT"),
+  //                                RegionSeq("SEQ3"),
+  //                                RegionSeq("SEQ4", "GGGGCCCC"),
+  //                            });
+
+  const auto read = vector<RegionSeq>{
+      RegionSeq("SEQ1"),
+      RegionSeq("SEQ2", "AAAATTTT"),
+      RegionSeq("SEQ3"),
+      RegionSeq("SEQ4", "GGGGCCCC"),
+  };
 
   FASTAReader parser{"test/input/sequences.fa"};
 
   for (const auto &ele : read) {
     ++result;
-    if (const auto &seq = parser.readFASTASeq(true))
-      result.addFailure(*seq != ele);
+    std::cerr << ele << "\n";
+    if (const auto &seq = parser()) result.addFailure(*seq != ele);
   }
 
   if (verbose || result.hasFailed()) cout << message.str() << "\n";

@@ -1,16 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
 project(pyHKL VERSION 0.1 LANGUAGES CXX)
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "/usr/lib/python3.6" CACHE PATH "..." FORCE)
+  set(CMAKE_INSTALL_PREFIX "/usr/lib/python3" CACHE PATH "..." FORCE)
 endif()
 
 if (NOT HEADER_INSTALL_PREFIX)
     set(HEADER_INSTALL_PREFIX "/usr/local" CACHE PATH "..." FORCE)
 endif()
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/agizmo)
+# install(EXPORT pyAGizmo-export DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 include(CTest)
 
@@ -27,6 +30,7 @@ target_include_directories(TestHKL
         ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
 )
 target_compile_features(TestHKL PRIVATE cxx_std_17)
+add_dependencies(TestHKL BasicTest)
 
 #add_test(Test TestHKL)
 add_test(NAME "Test" COMMAND TestHKL)
@@ -36,11 +40,10 @@ set_tests_properties(Test PROPERTIES WORKING_DIRECTORY
 add_custom_command(TARGET TestHKL
                    POST_BUILD
                    COMMAND "ctest"
-                   "--verbose"
-#                   "--output-on-failure"
+                    "--verbose"
+#                  "--output-on-failure"
 )
 
-add_subdirectory(agizmo/pybind11)
 pybind11_add_module(pyHKL src/pyhkl.cpp)
 target_include_directories(pyHKL
     PUBLIC
@@ -54,5 +57,11 @@ target_compile_options(pyHKL PRIVATE -march=x86-64 -mtune=native -O3 -g0
                        -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
                        -fvisibility=hidden -Werror -Wall -pthread)
 target_compile_features(pyHKL PRIVATE cxx_std_17)
-install(TARGETS pyHKL LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+install(TARGETS pyHKL EXPORT pyHKL-export
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+# install(TARGETS ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/pyAGizmo LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+
 install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)
+# install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include DESTINATION ${HEADER_INSTALL_PREFIX}/include)
