@@ -226,27 +226,14 @@ PYBIND11_MODULE(pyHKL, m) {
       .def("countGC", &RegionSeq::countGC)
       .def("calcGCRatio", &RegionSeq::calcGCRatio);
 
-  // m.def("readFASTAFile",
-  //       py::overload_cast<const string &, bool>(&FASTAReader::readFASTAFile),
-  //       "file_name"_a, "upper"_a = false);
-  // m.def("readFASTASeq", py::overload_cast<ifstream&, string&, string&,
-  // string&, bool>(&FASTAReader::readFASTASeq), "input"_a,
-  //       "old_name"_a, "name"_a, "seq"_a, "upper"_a = false);
+  py::class_<FASTAReader>(m, "FASTAReader")
+      // Constructors
+      .def(py::init<string>(), "file_name"_a)
 
-  //  py::class_<FASTAReader>(m, "FASTAReader")
-
-  //      // Constructors
-  //      .def(py::init<string>(), "file_name"_a)
-
-  //      .def("readFASTAFile",
-  //           py::overload_cast<bool>(&FASTAReader::readFASTAFile),
-  //           "upper"_a = false)
-  //      .def_static(
-  //          "readFASTAFile",
-  //          py::overload_cast<const string &,
-  //          bool>(&FASTAReader::readFASTAFile), "file_name"_a, "upper"_a =
-  //          false)
-  //      .def("readFASTASeq",
-  //      py::overload_cast<bool>(&FASTAReader::readFASTASeq),
-  //           "upper"_a = false);
+      .def("open", &FASTAReader::open, "file_name"_a)
+      .def("close", &FASTAReader::close)
+      .def("good", &FASTAReader::good)
+      .def("getSeq", &FASTAReader::getSeq)
+      .def("readFile", &FASTAReader::readFile, "upper"_a = false)
+      .def("readSeq", &FASTAReader::readSeq, "upper"_a = false);
 }

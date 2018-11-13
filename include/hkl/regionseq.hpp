@@ -216,9 +216,8 @@ class RegionSeq {
 class FASTAReader {
  private:
   Files::FileReader reader;
-  std::optional<string> old_name;
-  string seq;
-  RegionSeq old_seq;
+  optional<RegionSeq> prev_seq;
+  string next_name;
 
   static string prepareSeq(const string &seq, bool upper) noexcept {
     string output = seq;
@@ -231,116 +230,59 @@ class FASTAReader {
     return name.substr(1, name.size() - 1);
   }
 
-  bool loadSeq(bool upper) {
-    if (!reader.good()) return false;
+  void loadSeq(bool upper) {
+    if (!reader.good())
+      prev_seq = std::nullopt;
+    else {
+      string new_name;
+      string seq;
 
-    std::optional<string> new_name;
+      while (const auto line = reader()) {
+        if ((*line).empty()) continue;
 
-    while (const auto line = reader()) {
-      if ((*line).empty()) continue;
-
-      if ((*line)[0] == '>') {
-        new_name = line;
-        std::swap(new_name, old_name);
-        if (new_name)
-          break;
-        else
-          continue;
-      } else {
-        if (old_name)
+        if ((*line)[0] == '>') {
+          new_name = *line;
+          if (next_name.empty())
+            std::swap(new_name, next_name);
+          else
+            break;
+        } else {
+          if (next_name.empty())
+            throw runerror{"FASTA does not start with '>' sign"};
           seq += prepareSeq(*line, upper);
-        else
-          throw runerror{"FASTA file does not start with '>' line!"};
+        }
       }
+      prev_seq = RegionSeq(next_name, seq);
+      std::swap(new_name, next_name);
     }
-    if (new_name) {
-      old_seq = RegionSeq(*old_name, seq);
-      return true;
-    } else
-      return
   }
 
  public:
-  //  static bool readFASTASeq(ifstream &input, string &old_name, string &name,
-  //                           string &seq, bool upper = false) {
-  //    string line{};
-  //    name = {};
-  //    seq = {};
-
-  //    while (getline(input, line)) {
-  //      if (!line.size()) continue;
-
-  //      if (line.at(0) == '>') {
-  //        name = cutFASTAMarker(line);
-  //        if (old_name.size()) {
-  //          prepareSeq(old_name, name, seq, upper);
-  //          return true;
-  //        } else {
-  //          old_name = name;
-  //        }
-  //      } else
-  //        seq += line;
-  //    }
-
-  //    prepareSeq(old_name, name, seq, upper);
-  //    return name.size() ? true : false;
-  //  }
-
-  //  static optional<RegionSeq> readFASTASeq(ifstream &input, string &old_name,
-  //                                          bool upper = false) {
-  //    string name, seq;
-
-  //    if (readFASTASeq(input, old_name, name, seq, upper))
-  //      return RegionSeq(name, seq);
-  //    else
-  //      return nullopt;
-  //  }
-
-  //  static vector<RegionSeq> readFASTAFile(const string &file_name,
-  //                                         bool upper = false) {
-  //    ifstream input;
-  //    Files::open_file(file_name, input);
-
-  //    return readFASTAFile(input, upper);
-  //  }
-
-  //  static vector<RegionSeq> readFASTAFile(ifstream &input, bool upper =
-  //  false) {
-  //    vector<RegionSeq> result{};
-  //    string old_name, name, seq;
-  //    while (readFASTASeq(input, old_name, name, seq, upper))
-  //      result.emplace_back(name, seq);
-
-  //    input.close();
-
-  //    return result;
-  //  }
-
   FASTAReader(string file_name) : reader(file_name) {}
 
-  std::optional<RegionSeq> operator()(bool upper = false) {
-    while (loadSeq(upper)) {
-      std::cerr << old_seq << "\n";
-    }
-    return nullopt;
+  [[nodiscard]] auto good() const noexcept { return reader.good(); }
+  void close() {
+    prev_seq = std::nullopt;
+    reader.close();
+  }
+  void open(const string &file_name) {
+    close();
+    reader.open(file_name);
   }
 
-  //  vector<RegionSeq> readFASTAFile(bool upper = false) {
-  //    return readFASTAFile(input, upper);
-  //  }
+  [[nodiscard]] auto getSeq() const noexcept { return prev_seq; }
+  [[nodiscard]] auto readSeq(bool upper = false) {
+    loadSeq(upper);
+    return getSeq();
+  }
+  [[nodiscard]] auto operator()(bool upper = false) { return readSeq(upper); }
 
-  //  bool readFASTASeq(string &name, string &seq, bool upper = false) {
-
-  //    return readFASTASeq(this->input, this->old_name, name, seq, upper);
-  //  }
-
-  bool readSeq(bool upper = false) {
-    //    this->operator()(upper);
-    //    if (readFASTASeq(this->input, this->old_name, name, seq, upper))
-    //      return RegionSeq(name, seq);
-    //    else
-    //      return nullopt;
-    return true;
+  vector<RegionSeq> readFile(bool upper = false) {
+    vector<RegionSeq> result;
+    while (auto seq = readSeq(upper)) {
+      result.push_back(std::move(*seq));
+    }
+    return result;
   }
 };
 
