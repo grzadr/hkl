@@ -5,7 +5,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_STANDARD 17)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "/usr/lib/python3" CACHE PATH "..." FORCE)
+  set(CMAKE_INSTALL_PREFIX "/usr/lib/python3/dist-packages" CACHE PATH "..." FORCE)
 endif()
 
 if (NOT HEADER_INSTALL_PREFIX)
@@ -40,8 +40,8 @@ set_tests_properties(Test PROPERTIES WORKING_DIRECTORY
 add_custom_command(TARGET TestHKL
                    POST_BUILD
                    COMMAND "ctest"
-                    "--verbose"
-#                  "--output-on-failure"
+#                     "--verbose"
+                 "--output-on-failure"
 )
 
 pybind11_add_module(pyHKL src/pyhkl.cpp)
