@@ -7,9 +7,9 @@
 #include <pybind11/stl.h>
 // #include <exception>
 
+#include "hkl/gff.hpp"
 #include "hkl/region.hpp"
 #include "hkl/regionseq.hpp"
-// #include "dogitoys.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -236,4 +236,46 @@ PYBIND11_MODULE(pyHKL, m) {
       .def("getSeq", &FASTAReader::getSeq)
       .def("readFile", &FASTAReader::readFile, "upper"_a = false)
       .def("readSeq", &FASTAReader::readSeq, "upper"_a = false);
+
+  using namespace GFF;
+
+  py::class_<GFF::GFFRecord>(m, "GFFRecord")
+      .def(py::init<string>(), "line"_a)
+      .def("__str__", [](const GFF::GFFRecord &a) { return a.str(); })
+      .def("str", &GFFRecord::str, "full"_a = true)
+      .def("__getitem__",
+           [](const GFF::GFFRecord &a, const string &key) { return a.at(key); })
+      .def("get",
+           py::overload_cast<const string &>(&GFFRecord::get, py::const_),
+           "key"_a)
+      .def("get",
+           py::overload_cast<const string &, const string &>(&GFFRecord::get,
+                                                             py::const_),
+           "key"_a, "value"_a)
+      .def("has",
+           py::overload_cast<const string &>(&GFFRecord::has, py::const_),
+           "key"_a)
+      .def("isComment", &GFFRecord::isComment)
+      .def("isRecord", &GFFRecord::isRecord)
+
+      .def("getSeqID", &GFFRecord::getSeqID)
+      .def("getType", &GFFRecord::getType)
+      .def("getSource", &GFFRecord::getSource)
+      .def("getStart", &GFFRecord::getStart)
+      .def("getEnd", &GFFRecord::getEnd)
+      .def("getLength", &GFFRecord::getLength)
+      .def("getScore", &GFFRecord::getScore)
+      .def("getStrand", &GFFRecord::getStrand)
+      .def("getPhase", &GFFRecord::getPhase)
+      .def("getKeys", &GFFRecord::getKeys);
+
+  py::class_<GFFComment>(m, "GFFComment")
+      .def(py::init<string>(), "line"_a)
+      .def("__str__", [](const GFFComment &a) { return a.str(); })
+      .def("isComment", &GFFComment::isComment)
+      .def("isRecord", &GFFComment::isRecord);
+
+  py::class_<GFFReader>(m, "GFFReader")
+      .def(py::init<string>(), "file_name"_a)
+      .def("getItem", &GFFReader::getItem, "skip"_a = "");
 }

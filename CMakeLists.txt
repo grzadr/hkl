@@ -1,16 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
 project(pyHKL VERSION 0.1 LANGUAGES CXX)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_STANDARD 17)
 
+find_package (Python3 COMPONENTS Interpreter Development)
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "/usr/lib/python3/dist-packages" CACHE PATH "..." FORCE)
+  set(CMAKE_INSTALL_PREFIX ${Python3_SITELIB} CACHE PATH "..." FORCE)
 endif()
 
 if (NOT HEADER_INSTALL_PREFIX)
     set(HEADER_INSTALL_PREFIX "/usr/local" CACHE PATH "..." FORCE)
 endif()
+# message("${PYTHON_EXECUTABLE}/site-packages")
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/agizmo)
 # install(EXPORT pyAGizmo-export DESTINATION ${CMAKE_INSTALL_PREFIX})

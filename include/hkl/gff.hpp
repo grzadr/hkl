@@ -82,7 +82,6 @@ class GFFRecord {
 
   GFFRecord() = default;
   GFFRecord(const string &line) {
-    //    temp = line;
     const auto splitted = StringDecompose::str_split(line, "\t");
 
     assert(splitted.size() == 9);
@@ -132,7 +131,7 @@ class GFFRecord {
     }
   }
 
-  string str() const {
+  string str(bool full = true) const {
     sstream output;
     output << seqid.value_or(".") << '\t' << source.value_or(".") << '\t'
            << type.value_or(".") << '\t' << range_start << "\t" << range_end
@@ -152,7 +151,7 @@ class GFFRecord {
     else
       output << ".";
 
-    output << '\t' << attr;
+    if (full) output << '\t' << attr;
 
     return output.str();
   }
@@ -161,23 +160,34 @@ class GFFRecord {
     return stream << item.str();
   }
 
-  opt_str get_seqid() const { return seqid; }
-  opt_str get_type() const { return type; }
-  opt_str get_source() const { return source; }
-  int get_start() const { return range_start; }
-  int get_end() const { return range_end; }
-  size_t get_length() const { return length; }
-  opt_double get_score() const { return score; }
-  opt_char get_strand() const { return strand; }
-  opt_int get_phase() const { return phase; }
+  opt_str getSeqID() const { return seqid; }
+  opt_str getType() const { return type; }
+  opt_str getSource() const { return source; }
+  int getStart() const { return range_start; }
+  int getEnd() const { return range_end; }
+  size_t getLength() const { return length; }
+  opt_double getScore() const { return score; }
+  opt_char getStrand() const { return strand; }
+  opt_int getPhase() const { return phase; }
+
+  bool isRecord() const noexcept { return true; }
+  bool isComment() const noexcept { return false; }
 
   auto begin() const noexcept { return attr.begin(); }
   auto end() const noexcept { return attr.end(); }
 
+  auto &operator[](const string &key) { return attr[key]; }
   auto at(string key) const { return attr.at(key); }
-  std::optional<opt_str> get(string key) const noexcept {
+  optional<opt_str> get(const string &key) const noexcept {
     return attr.get(key);
   }
+  string get(const string &key, const string &value) const {
+    return attr.get(key, value);
+  }
+
+  bool has(const string &key) const { return attr.has(key); }
+
+  auto &getKeys() { return attr.get_keys(); }
 };
 
 class GFFComment {
@@ -203,6 +213,8 @@ class GFFComment {
   bool isEmpty() const { return empty; }
   bool isMeta() const { return (field[0] == '!'); }
   bool isRegion() const { return field == "sequence-region"; }
+  bool isRecord() const noexcept { return false; }
+  bool isComment() const noexcept { return true; }
 
   string str() const {
     if (isEmpty())
@@ -239,16 +251,21 @@ class GFFReader {
  private:
   Files::FileReader reader;
 
- public:
-  GFFReader() = delete;
-  GFFReader(const string &file_name) : reader{file_name} {}
-
   gff_variant process(const string &line) const {
     if (line.find_first_of('#') == 0)
       return GFFComment{line};
     else
       return GFFRecord{line};
   }
+
+ public:
+  GFFReader() = delete;
+  GFFReader(const string &file_name) : reader{file_name} {}
+
+  optional<gff_variant> getItem(const string &skip = {}) {
+    return (*this)(skip);
+  }
+
   optional<gff_variant> operator()(const string &skip = {}) {
     if (const auto line = reader(skip)) {
       if ((*line).empty())
