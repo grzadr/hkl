@@ -7,9 +7,12 @@ set(CMAKE_CXX_STANDARD 17)
 find_package (Python3 COMPONENTS Interpreter Development)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${Python3_SITELIB} CACHE PATH "..." FORCE)
+    set(CMAKE_INSTALL_PREFIX "/usr/local" CACHE PATH "..." FORCE)
 endif()
 
+if (NOT PYTHON_INSTALL_PREFIX)
+    set(PYTHON_INSTALL_PREFIX ${Python3_SITELIB} CACHE PATH "..." FORCE)
+endif()
 if (NOT HEADER_INSTALL_PREFIX)
     set(HEADER_INSTALL_PREFIX "/usr/local" CACHE PATH "..." FORCE)
 endif()
@@ -60,5 +63,5 @@ target_compile_options(pyHKL PRIVATE -march=x86-64 -mtune=native -O3 -g0
 target_compile_features(pyHKL PRIVATE cxx_std_17)
 
 install(TARGETS pyHKL EXPORT pyHKL-export
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX})
+LIBRARY DESTINATION ${PYTHON_INSTALL_PREFIX})
 install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)
