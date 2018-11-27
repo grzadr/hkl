@@ -13,10 +13,8 @@ endif()
 if (NOT HEADER_INSTALL_PREFIX)
     set(HEADER_INSTALL_PREFIX "/usr/local" CACHE PATH "..." FORCE)
 endif()
-# message("${PYTHON_EXECUTABLE}/site-packages")
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/agizmo)
-# install(EXPORT pyAGizmo-export DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 include(CTest)
 
