@@ -13,11 +13,30 @@ endif()
 if (NOT PYTHON_INSTALL_PREFIX)
     set(PYTHON_INSTALL_PREFIX ${Python3_SITELIB} CACHE PATH "..." FORCE)
 endif()
+
 if (NOT HEADER_INSTALL_PREFIX)
     set(HEADER_INSTALL_PREFIX "/usr/local" CACHE PATH "..." FORCE)
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/agizmo)
+
+add_executable(GFFlatter
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/gfflatter.cpp
+  )
+
+target_include_directories(GFFlatter
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/test/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
+)
+
+target_compile_options(GFFlatter PRIVATE
+  -march=x86-64 -mtune=native -O3 -g0
+  -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
+  -fvisibility=hidden -Werror -Wall -pthread)
+target_compile_features(GFFlatter PRIVATE cxx_std_17)
+
 
 include(CTest)
 
@@ -65,3 +84,4 @@ target_compile_features(pyHKL PRIVATE cxx_std_17)
 install(TARGETS pyHKL EXPORT pyHKL-export
 LIBRARY DESTINATION ${PYTHON_INSTALL_PREFIX})
 install(DIRECTORY include/hkl DESTINATION ${HEADER_INSTALL_PREFIX}/include)
+install(TARGETS GFFlatter RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
