@@ -94,7 +94,8 @@ class GFFRecord {
     if (const auto &source = *(++item); source != ".")
       this->source = gff3_str_clean(source);
 
-    if (const auto &type = *(++item); type != ".") this->type = type;
+    if (const auto &type = *(++item); type != ".")
+      this->type = gff3_str_clean(type);
 
     if (const auto &start = StringFormat::str_to_int(*(++item)))
       this->range_start = *start;
@@ -127,38 +128,15 @@ class GFFRecord {
     attr = Printable::PrintableStrMap(splitted.at(8), ';', '=');
     for (const auto &key : attr.get_keys()) {
       if (auto &value = attr[key]; value.has_value())
-        attr[key] = gff3_str_clean(*value);
+        if ((*value).find(',') == string::npos)
+          attr[key] = gff3_str_clean(*value);
     }
   }
 
-  string str(bool full = true) const {
-    sstream output;
-    output << seqid.value_or(".") << '\t' << source.value_or(".") << '\t'
-           << type.value_or(".") << '\t' << range_start << "\t" << range_end
-           << "\t";
-    if (const auto &score = this->score) {
-      if (*score != 1.0)
-        output << StringFormat::str_double(*score, 3, 0);
-      else
-        output << 1;
-    } else
-      output << ".";
+  auto &getKeys() { return attr.get_keys(); }
 
-    output << "\t" << strand.value_or('.') << "\t";
-
-    if (const auto &phase = this->phase)
-      output << *phase;
-    else
-      output << ".";
-
-    if (full) output << '\t' << attr;
-
-    return output.str();
-  }
-
-  friend std::ostream &operator<<(ostream &stream, const GFFRecord &item) {
-    return stream << item.str();
-  }
+  auto size() const { return attr.size(); }
+  auto isEmpty() const { return attr.isEmpty(); }
 
   opt_str getSeqID() const { return seqid; }
   opt_str getType() const { return type; }
@@ -176,18 +154,99 @@ class GFFRecord {
   auto begin() const noexcept { return attr.begin(); }
   auto end() const noexcept { return attr.end(); }
 
+  auto keys_begin() noexcept { return attr.keys_begin(); }
+  auto keys_end() noexcept { return attr.keys_end(); }
+  auto keys_cbegin() const noexcept { return attr.keys_cbegin(); }
+  auto keys_cend() const noexcept { return attr.keys_cend(); }
+
   auto &operator[](const string &key) { return attr[key]; }
   auto at(string key) const { return attr.at(key); }
   optional<opt_str> get(const string &key) const noexcept {
     return attr.get(key);
   }
-  string get(const string &key, const string &value) const {
-    return attr.get(key, value);
+  string get(const string &key, const string &value,
+             const string &empty = "") const {
+    return attr.get(key, value, empty);
   }
 
   bool has(const string &key) const { return attr.has(key); }
 
-  auto &getKeys() { return attr.get_keys(); }
+  string str() const {
+    sstream output;
+    output << gff3_str_escape(seqid.value_or(".")) << '\t'
+           << gff3_str_escape(source.value_or(".")) << '\t'
+           << gff3_str_escape(type.value_or(".")) << '\t' << range_start << "\t"
+           << range_end << "\t";
+    if (const auto &score = this->score) {
+      if (*score != 1.0)
+        output << StringFormat::str_double(*score, 3, 0);
+      else
+        output << 1;
+    } else
+      output << ".";
+
+    output << "\t" << strand.value_or('.') << "\t";
+
+    if (const auto &phase = this->phase)
+      output << *phase;
+    else
+      output << ".";
+
+    output << "\t"
+           << attr.join_fields(attr.keys_cbegin(), attr.keys_cend(), ';', '=',
+                               [](const string &ele) {
+                                 if (ele.find(',') == string::npos)
+                                   return gff3_str_escape(ele);
+                                 else
+                                   return ele;
+                               });
+
+    return output.str();
+  }
+
+  string strFields(const string &missing = ".",
+                   const string &sep = "\t") const {
+    sstream output;
+    output << seqid.value_or(missing) << sep << source.value_or(missing) << sep
+           << type.value_or(missing) << sep << range_start << "\t" << range_end
+           << "\t";
+    if (const auto &score = this->score) {
+      if (*score != 1.0)
+        output << StringFormat::str_double(*score, 3, 0);
+      else
+        output << 1;
+    } else
+      output << missing;
+
+    if (strand.has_value())
+      output << sep << *strand << sep;
+    else
+      output << sep << missing << sep;
+
+    if (const auto &phase = this->phase)
+      output << *phase;
+    else
+      output << missing;
+
+    return output.str();
+  }
+
+  template <class It>
+  string strAttributes(It begin, It end, const string &missing = ".",
+                       const string &sep = "\t",
+                       const string &empty = "true") const {
+    sstream output;
+
+    for (auto key = begin; key != end; ++key) {
+      output << sep << get(*key, missing, empty);
+    }
+
+    return output.str();
+  }
+
+  friend std::ostream &operator<<(ostream &stream, const GFFRecord &item) {
+    return stream << item.str();
+  }
 };
 
 class GFFComment {
@@ -222,7 +281,7 @@ class GFFComment {
     else if (isMeta())
       return "#" + field + " " + value;
     else if (isRegion())
-      return "##" + field + "   " + value;
+      return "##" + field + " " + value;
     else
       return "##" + field + " " + value;
   }
@@ -252,7 +311,6 @@ class GFFReader {
   Files::FileReader reader;
 
   gff_variant process(const string &line) const {
-    std::cerr << "PROCESSING LINE\n";
     if (line.find_first_of('#') == 0)
       return GFFComment{line};
     else
@@ -262,18 +320,14 @@ class GFFReader {
  public:
   GFFReader() = delete;
   GFFReader(const string &file_name) : reader{file_name} {}
-  GFFReader(std::istream &stream) : reader{stream} {
-    std::cerr << "Constructed from STDIN\n";
-  }
+  GFFReader(std::istream &stream) : reader{stream} {}
 
   optional<gff_variant> getItem(const string &skip = {}) {
     return (*this)(skip);
   }
 
   optional<gff_variant> operator()(const string &skip = {}) {
-    std::cerr << "READING LINE\n" << reader.getLine();
     if (const auto line = reader(skip)) {
-      cerr << "FETCHED LINE\n";
       if ((*line).empty())
         return (*this)(skip);
       else

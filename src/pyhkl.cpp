@@ -242,16 +242,16 @@ PYBIND11_MODULE(pyHKL, m) {
   py::class_<GFF::GFFRecord>(m, "GFFRecord")
       .def(py::init<string>(), "line"_a)
       .def("__str__", [](const GFF::GFFRecord &a) { return a.str(); })
-      .def("str", &GFFRecord::str, "full"_a = true)
+      .def("str", &GFFRecord::str)
       .def("__getitem__",
            [](const GFF::GFFRecord &a, const string &key) { return a.at(key); })
       .def("get",
            py::overload_cast<const string &>(&GFFRecord::get, py::const_),
            "key"_a)
       .def("get",
-           py::overload_cast<const string &, const string &>(&GFFRecord::get,
-                                                             py::const_),
-           "key"_a, "value"_a)
+           py::overload_cast<const string &, const string &, const string &>(
+               &GFFRecord::get, py::const_),
+           "key"_a, "value"_a, "empty"_a = "")
       .def("has",
            py::overload_cast<const string &>(&GFFRecord::has, py::const_),
            "key"_a)
