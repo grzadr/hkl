@@ -262,7 +262,9 @@ class GFFReader {
  public:
   GFFReader() = delete;
   GFFReader(const string &file_name) : reader{file_name} {}
-  GFFReader(std::istream &stream) : reader{stream} {}
+  GFFReader(std::istream &stream) : reader{stream} {
+    std::cerr << "Constructed from STDIN\n";
+  }
 
   optional<gff_variant> getItem(const string &skip = {}) {
     return (*this)(skip);

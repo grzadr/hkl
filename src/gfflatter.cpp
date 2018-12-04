@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
   else
     std::make_unique<GFF::GFFReader>(std::cin);
 
-  std::cerr << "Reading";
+  std::cerr << "Reading\n";
 
   while (const auto line = reader->getItem()) {
     cerr << (*line).index() << "\n";
