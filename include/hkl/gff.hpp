@@ -252,6 +252,7 @@ class GFFReader {
   Files::FileReader reader;
 
   gff_variant process(const string &line) const {
+    std::cerr << "PROCESSING LINE\n";
     if (line.find_first_of('#') == 0)
       return GFFComment{line};
     else
@@ -261,13 +262,16 @@ class GFFReader {
  public:
   GFFReader() = delete;
   GFFReader(const string &file_name) : reader{file_name} {}
+  GFFReader(std::istream &stream) : reader{stream} {}
 
   optional<gff_variant> getItem(const string &skip = {}) {
     return (*this)(skip);
   }
 
   optional<gff_variant> operator()(const string &skip = {}) {
+    std::cerr << "READING LINE\n" << reader.getLine();
     if (const auto line = reader(skip)) {
+      cerr << "FETCHED LINE\n";
       if ((*line).empty())
         return (*this)(skip);
       else
