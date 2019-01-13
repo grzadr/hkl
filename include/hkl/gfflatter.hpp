@@ -22,7 +22,7 @@ using std::vector;
 enum class Formats { TSV = 0, JSON = 1 };
 
 class Parameters {
- private:
+private:
   optional<string> input;
   optional<string> output;
   vector<string> keys;
@@ -31,9 +31,9 @@ class Parameters {
   string empty{"true"};
   bool comments{false};
 
- public:
+public:
   Parameters() = default;
-  void parse(int argc, char* argv[]);
+  void parse(int argc, char *argv[]);
 
   bool hasInput() const { return input.has_value(); }
   auto getInput() const { return input; }
@@ -45,10 +45,10 @@ class Parameters {
   auto getEmpty() const { return empty; }
 };
 
-void gffile_to_tsv(std::unique_ptr<GFFReader>& reader,
-                   std::unique_ptr<std::ostream>& writer, const string& missing,
-                   const std::string& empty, bool comments);
+void gffile_to_tsv(std::unique_ptr<GFFReader> &reader,
+                   std::unique_ptr<std::ostream> &writer, const string &missing,
+                   const std::string &empty, bool comments);
 
-}  // namespace GFF
+} // namespace GFF
 
-}  // namespace HKL
+} // namespace HKL
