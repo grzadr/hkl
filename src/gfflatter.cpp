@@ -11,12 +11,12 @@ using namespace HKL;
 
 using std::cerr;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   GFF::Parameters args{};
 
   try {
     args.parse(argc, argv);
-  } catch (const runtime_error& ex) {
+  } catch (const runtime_error &ex) {
     std::cerr << ex.what() << "\n";
     return 1;
   }
@@ -36,19 +36,35 @@ int main(int argc, char* argv[]) {
     writer = std::make_unique<std::ostream>(std::cout.rdbuf());
 
   switch (args.getFormat()) {
-    case GFF::Formats::TSV:
-      GFF::gffile_to_tsv(reader, writer, args.getMissing(), args.getEmpty(),
-                         args.hasComments());
-      break;
-    default:
-      throw runtime_error{"Unsupported format"};
+  case GFF::Formats::TSV:
+    GFF::gffile_to_tsv(reader, writer, args.getMissing(), args.getEmpty(),
+                       args.hasComments());
+    break;
+  default:
+    throw runtime_error{"Unsupported format"};
   }
 
   return 0;
 }
 
-void GFF::Parameters::parse(int argc, char* argv[]) {
-  for (const auto& flag : Args::Arguments(argc, argv)) {
+void GFF::Parameters::parse(int argc, char *argv[]) {
+  Args::Arguments args{};
+
+  args.addArgument("input", "Input file in GFF format", Args::ValueType::String,
+                   'i');
+  args.addArgument("format", "Format of data", Args::ValueType::String, 'f',
+                   "tsv");
+  args.addArgument("comments", "Print comments", Args::ValueType::Bool, 'c');
+  args.addArgument(
+      "keys",
+      "Get only these keys as columns. Values should be delimetered with ','.",
+      Args::ValueType::String, 'k');
+  args.addArgument("empty", "Value to use when columns is empty.",
+                   Args::ValueType::String, 'e', ".");
+
+  args.parse(argc, argv);
+
+  for (const auto &flag : args) {
     if (const auto name = flag.getName(); name == "input" || name == "i") {
       if (flag.isEmpty())
         throw runtime_error{
@@ -98,9 +114,9 @@ void GFF::Parameters::parse(int argc, char* argv[]) {
   }
 }
 
-void GFF::gffile_to_tsv(std::unique_ptr<GFF::GFFReader>& reader,
-                        std::unique_ptr<std::ostream>& writer,
-                        const string& missing, const string& empty,
+void GFF::gffile_to_tsv(std::unique_ptr<GFF::GFFReader> &reader,
+                        std::unique_ptr<std::ostream> &writer,
+                        const string &missing, const string &empty,
                         bool comments) {
   string header = "seqid\tsource\ttype\tstart\tend\tscore\tstrand\tphase";
   std::unordered_set<string> keys_to_print;
@@ -108,14 +124,15 @@ void GFF::gffile_to_tsv(std::unique_ptr<GFF::GFFReader>& reader,
   int counter = 0;
 
   while (const auto line = reader->getItem()) {
-    if (++counter % 1000000 == 0) std::clog << counter << "\n";
+    if (++counter % 1000000 == 0)
+      std::clog << counter << "\n";
     if ((*line).index() == 1) {
       auto record = std::get<GFF::GFFRecord>(*line);
       std::copy(record.keys_begin(), record.keys_end(),
                 std::inserter(keys_to_print, keys_to_print.begin()));
       records.push_back(record);
     } else if (comments)
-      std::visit([&writer](auto&& ele) { *writer << ele << "\n"; }, *line);
+      std::visit([&writer](auto &&ele) { *writer << ele << "\n"; }, *line);
   }
 
   *writer << header << "\t"
@@ -123,8 +140,9 @@ void GFF::gffile_to_tsv(std::unique_ptr<GFF::GFFReader>& reader,
                                      "\t")
           << "\n";
   counter = 0;
-  for (const auto& record : records) {
-    if (++counter % 1000000 == 0) std::clog << counter << "\n";
+  for (const auto &record : records) {
+    if (++counter % 1000000 == 0)
+      std::clog << counter << "\n";
     *writer << record.strFields(missing, "\t")
             << record.strAttributes(keys_to_print.begin(), keys_to_print.end(),
                                     missing, "\t", empty)
