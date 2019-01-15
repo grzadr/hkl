@@ -76,18 +76,36 @@ class VCFHeader {
 
 class VCFComment {
  private:
-  string comment;
+  string field;
+  string value;
+  bool proper{false};
 
  public:
   VCFComment() = default;
   VCFComment(const string &line) {
-    comment = line.substr(2);
-
     const auto &[field, value] =
-        StringDecompose::str_split_in_half(comment, '=');
+        StringDecompose::str_split_in_half(line.substr(2), '=');
     if (field.empty() || value.empty())
-      throw runerror{"Error in formatiing of line:\n" + comment};
-    if (value.front() != '<') std::cerr << value << "\n";
+      throw runerror{"Error in formatting of line:\n" + line};
+
+    this->field = field;
+    this->value = value;
+    this->proper =
+        (StringSearch::str_starts_with(value, "<ID=") && value.back() == '>');
+
+    if (isProper()) this->value = this->value.substr(1, this->value.size() - 2);
+  }
+
+  string getField() const noexcept { return field; }
+  string getValue() const noexcept { return value; }
+
+  bool isProper() const noexcept { return proper; }
+
+  string str() const { return field + "=" + value; }
+
+  friend std::ostream &operator<<(std::ostream &stream,
+                                  const VCFComment &item) {
+    return stream << item.str();
   }
 };
 
