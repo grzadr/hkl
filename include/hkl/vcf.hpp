@@ -38,6 +38,9 @@ class VCFGenotype {
   VCFGenotype(const vec_str &format, const string &query) {
     data = map_str{format, StringDecompose::str_split(query, ':', true)};
   }
+
+  auto begin() const noexcept { return data.begin(); }
+  auto end() const noexcept { return data.end(); }
 };
 
 class VCFRecord {
@@ -122,6 +125,7 @@ class VCFRecord {
   auto getIDs() const { return id; }
   auto getFilters() const { return filter; }
   auto getInfo() const { return info; }
+  auto getGenotypes() const { return genotypes; }
 };
 
 class VCFHeader {
@@ -194,11 +198,10 @@ class VCFReader {
   var_vcf process(const string &line) {
     if (line.find_last_of('#') == 0) {
       auto header = VCFHeader{line};
-      this->header_size = header.getSize();
+      this->header_size = static_cast<int>(header.getSize());
       if (header.hasSamples()) {
         samples_reference = header.getSamples();
-        samples_picked =
-            vector<int>{static_cast<int>(samples_reference.size())};
+        samples_picked = vector<int>(samples_reference.size(), 0);
         std::iota(samples_picked.begin(), samples_picked.end(), 0);
       }
       return var_vcf{header};
