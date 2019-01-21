@@ -21,35 +21,107 @@ using std::vector;
 using opt_str = optional<string>;
 using opt_double = optional<double>;
 
+using vec_str = vector<string>;
+
 using runerror = std::runtime_error;
 
 using namespace AGizmo;
 
+using map_str = Printable::PrintableStrMap;
+
 class VCFGenotype {
+ private:
+  map_str data{};
+
  public:
-  VCFGenotype() = default;
+  VCFGenotype() = delete;
+  VCFGenotype(const vec_str &format, const string &query) {
+    data = map_str{format, StringDecompose::str_split(query, ':', true)};
+  }
 };
 
 class VCFRecord {
  private:
   string chrom;
-  int pos = 0;
+  int pos_start = 0;
+  int pos_end = 0;
+  int pos_length = 0;
   vector<string> id;
   string ref;
   vector<string> alt;
-  opt_double qual;
-  vector<string> filter;
+  opt_double qual{};
+  optional<vector<string>> filter;
   vector<string> format;
   vector<VCFGenotype> genotypes;
 
-  Printable::PrintableStrMap info{};
+  map_str info{};
+
+  int header_size = 0;
 
  public:
-  VCFRecord() = default;
+  VCFRecord() = delete;
   VCFRecord(const string &line) {
-    //      std::cerr << line << "\n";
+    std::cerr << line << "\n";
     if (line.empty()) throw runerror{"Empty line"};
+    auto fields = StringDecompose::str_split(line, '\t', true);
+    header_size = static_cast<int>(fields.size());
+
+    if (header_size < 8)
+      throw runerror{"Number of columns is lower that VCF standard specifies " +
+                     std::to_string(header_size) + "< 8!"};
+
+    auto iter = fields.begin();
+
+    chrom = *iter++;
+    if (chrom.empty() || chrom == ".")
+      throw runerror{"CHROM column cannot be empty"};
+
+    pos_start = std::stoi(*iter++);
+    if (auto temp_id = *iter++; !temp_id.empty() && temp_id != ".")
+      id = StringDecompose::str_split(temp_id, ',', true);
+
+    ref = *iter++;
+    if (ref.empty()) throw runerror{"Empty REF column"};
+
+    pos_length = static_cast<int>(ref.size());
+    pos_end = pos_start + pos_length - 1;
+    alt = StringDecompose::str_split(*iter++, ',', true);
+    if (auto temp_qual = *iter++; temp_qual == ".")
+      qual = nullopt;
+    else
+      qual = std::stod(temp_qual);
+    if (auto temp_filter = *iter++; temp_filter == ".")
+      filter = nullopt;
+    else if (temp_filter == "PASS")
+      filter = vec_str{};
+    else
+      filter = StringDecompose::str_split(temp_filter, ',', true);
+    info = map_str{*iter++, ';', '=', '"'};
+
+    if (iter < fields.end()) {
+      format = StringDecompose::str_split(*iter++, ':', true);
+
+      for (; iter < fields.end(); ++iter) genotypes.emplace_back(format, *iter);
+    }
   }
+
+  auto getChrom() const { return chrom; }
+  auto getStart() const { return pos_start; }
+  auto getEnd() const { return pos_end; }
+  auto getLength() const { return pos_length; }
+  auto getRef() const { return ref; }
+  auto getAlt() const { return alt; }
+  auto getQual() const { return qual; }
+  optional<int> getPass() const {
+    if (auto pass = this->filter)
+      return static_cast<int>(filter->size());
+    else
+      return nullopt;
+  }
+  auto getAlleles() const { return 1 + static_cast<int>(alt.size()); }
+  auto getIDs() const { return id; }
+  auto getFilters() const { return filter; }
+  auto getInfo() const { return info; }
 };
 
 class VCFHeader {
@@ -114,6 +186,7 @@ using var_vcf = std::variant<VCFRecord, VCFComment, VCFHeader>;
 class VCFReader {
  private:
   Files::FileReader reader;
+  int header_size = 0;
 
   vector<string> samples_reference{};
   vector<int> samples_picked{};
@@ -121,6 +194,7 @@ class VCFReader {
   var_vcf process(const string &line) {
     if (line.find_last_of('#') == 0) {
       auto header = VCFHeader{line};
+      this->header_size = header.getSize();
       if (header.hasSamples()) {
         samples_reference = header.getSamples();
         samples_picked =
@@ -154,6 +228,8 @@ class VCFReader {
       return nullopt;
   }
 
+  auto getHeaderSize() const { return header_size; }
+
   void provideSamples(const string &samples) {
     provideSamples(StringDecompose::str_split(samples, ',', true));
   }
@@ -162,6 +238,10 @@ class VCFReader {
     samples_picked = {};
 
     if (samples.empty()) return;
+
+    if (!this->hasSamples())
+      throw runerror{"VCF does not contain any samples!"};
+
     samples_picked.reserve(samples.size());
     auto samples_end = samples_reference.end();
     auto samples_begin = samples_reference.begin();
@@ -176,6 +256,9 @@ class VCFReader {
   }
 
   bool hasSamples() const { return samples_picked.size(); }
+
+  auto getSamplesReference() const { return samples_reference; }
+  auto getSamplesPicked() const { return samples_picked; }
 };
 
 }  // namespace HKL::VCF
