@@ -29,18 +29,93 @@ using namespace AGizmo;
 
 using map_str = Printable::PrintableStrMap;
 
+class VCFAllele {
+ private:
+  int position;
+  opt_int allele;
+  opt_int depth;
+
+ public:
+  VCFAllele() = delete;
+  VCFAllele(int position, const string &allele) : position{position} {
+    this->allele = allele == "." ? nullopt : opt_int{std::stoi(allele)};
+  }
+
+  int getPosition() const { return position; }
+  opt_int getAllele() const { return allele; }
+  bool hasAllele() const { return allele.has_value(); }
+};
+
+class VCFPhasedGenotype {
+ private:
+  opt_str gt{};
+  opt_int position{};
+
+ public:
+  VCFPhasedGenotype() = default;
+  VCFPhasedGenotype(const string &gt, const string &position) {
+    this->gt = gt.find('.') != string::npos ? nullopt : opt_str{gt};
+    this->position =
+        position == "." ? nullopt
+                        : opt_int{std::stoi(StringDecompose::str_extract_before(
+                              position, '_'))};
+  }
+
+  bool hasValue() const { return gt.has_value() && position.has_value(); }
+  auto getGT() const { return gt; }
+  auto getPosition() const { return position; }
+};
+
 class VCFGenotype {
  private:
   map_str data{};
+  vector<VCFAllele> alleles{};
+  opt_str gt{};
+  VCFPhasedGenotype phased{};
 
  public:
   VCFGenotype() = delete;
   VCFGenotype(const vec_str &format, const string &query) {
-    data = map_str{format, StringDecompose::str_split(query, ':', true)};
+    auto query_values = StringDecompose::str_split(query, ':', true);
+
+    if (format.size() != query_values.size()) {
+      if (format.back() == "PL" && format.size() - query_values.size() == 1)
+        query_values.emplace_back(".");
+    }
+
+    data = map_str{format, query_values};
+
+    if (auto temp_gt = data.get("GT");
+        temp_gt.has_value() && (*temp_gt)->find('.') == string::npos) {
+      this->gt = *temp_gt;
+
+      const auto vector_gt = StringDecompose::str_split(
+          *(*temp_gt), ((*temp_gt)->find('/') == string::npos ? '|' : '/'),
+          true);
+      int pos = 0;
+
+      for (const auto &gt : vector_gt) alleles.emplace_back(pos++, gt);
+    }
+
+    if (auto temp_gt = data.get("PGT"))
+      phased = VCFPhasedGenotype{*(*temp_gt), *(*data.get("PID"))};
   }
 
   auto begin() const noexcept { return data.begin(); }
   auto end() const noexcept { return data.end(); }
+
+  auto getAlleles() const { return alleles; }
+
+  auto get(const string &key, const string &value,
+           const string &empty = "") const {
+    return data.get(key, value, empty);
+  }
+  auto get(const string &key) const { return data.get(key); }
+  bool hasGT() const { return gt.has_value(); }
+  auto getGT() const { return gt; }
+  auto isPhased() const { return phased.hasValue(); }
+  auto getPhasedGT() const { return phased.getGT(); }
+  auto getPhasedPosition() const { return phased.getPosition(); }
 };
 
 class VCFRecord {
