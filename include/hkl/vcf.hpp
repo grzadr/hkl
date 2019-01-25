@@ -49,21 +49,18 @@ class VCFAllele {
 class VCFPhasedGenotype {
  private:
   opt_str gt{};
-  opt_int position{};
+  opt_str id{};
 
  public:
   VCFPhasedGenotype() = default;
-  VCFPhasedGenotype(const string &gt, const string &position) {
-    this->gt = gt.find('.') != string::npos ? nullopt : opt_str{gt};
-    this->position =
-        position == "." ? nullopt
-                        : opt_int{std::stoi(StringDecompose::str_extract_before(
-                              position, '_'))};
+  VCFPhasedGenotype(const string &pgt, const string &pid) {
+    this->gt = pgt.find('.') != string::npos ? nullopt : opt_str{pgt};
+    this->id = pid == "." ? nullopt : opt_str{pid};
   }
 
-  bool hasValue() const { return gt.has_value() && position.has_value(); }
+  bool hasValue() const { return gt.has_value() && id.has_value(); }
   auto getGT() const { return gt; }
-  auto getPosition() const { return position; }
+  auto getID() const { return id; }
 };
 
 class VCFGenotype {
@@ -71,6 +68,7 @@ class VCFGenotype {
   map_str data{};
   vector<VCFAllele> alleles{};
   opt_str gt{};
+  opt_int dp{};
   VCFPhasedGenotype phased{};
 
  public:
@@ -83,7 +81,10 @@ class VCFGenotype {
         query_values.emplace_back(".");
     }
 
-    data = map_str{format, query_values};
+    data =
+        map_str{vec_str(format.begin(),
+                        format.begin() + static_cast<int>(query_values.size())),
+                query_values};
 
     if (auto temp_gt = data.get("GT");
         temp_gt.has_value() && (*temp_gt)->find('.') == string::npos) {
@@ -96,6 +97,10 @@ class VCFGenotype {
 
       for (const auto &gt : vector_gt) alleles.emplace_back(pos++, gt);
     }
+
+    if (auto temp_dp = data.get("DP");
+        temp_dp.has_value() && (*temp_dp)->find('.') == string::npos)
+      this->dp = std::stoi(*(*temp_dp));
 
     if (auto temp_gt = data.get("PGT"))
       phased = VCFPhasedGenotype{*(*temp_gt), *(*data.get("PID"))};
@@ -113,9 +118,11 @@ class VCFGenotype {
   auto get(const string &key) const { return data.get(key); }
   bool hasGT() const { return gt.has_value(); }
   auto getGT() const { return gt; }
+  bool hasDP() const { return dp.has_value(); }
+  auto getDP() const { return dp; }
   auto isPhased() const { return phased.hasValue(); }
   auto getPhasedGT() const { return phased.getGT(); }
-  auto getPhasedPosition() const { return phased.getPosition(); }
+  auto getPhasedID() const { return phased.getID(); }
 };
 
 class VCFRecord {
@@ -139,7 +146,7 @@ class VCFRecord {
  public:
   VCFRecord() = delete;
   VCFRecord(const string &line) {
-    std::cerr << line << "\n";
+    //    std::cerr << line << "\n";
     if (line.empty()) throw runerror{"Empty line"};
     auto fields = StringDecompose::str_split(line, '\t', true);
     header_size = static_cast<int>(fields.size());
