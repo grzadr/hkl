@@ -30,12 +30,12 @@ using namespace AGizmo;
 using map_str = Printable::PrintableStrMap;
 
 class VCFAllele {
- private:
+private:
   int position;
   opt_int allele;
   opt_int depth;
 
- public:
+public:
   VCFAllele() = delete;
   VCFAllele(int position, const string &allele) : position{position} {
     this->allele = allele == "." ? nullopt : opt_int{std::stoi(allele)};
@@ -47,11 +47,11 @@ class VCFAllele {
 };
 
 class VCFPhasedGenotype {
- private:
+private:
   opt_str gt{};
   opt_str id{};
 
- public:
+public:
   VCFPhasedGenotype() = default;
   VCFPhasedGenotype(const string &pgt, const string &pid) {
     this->gt = pgt.find('.') != string::npos ? nullopt : opt_str{pgt};
@@ -64,14 +64,15 @@ class VCFPhasedGenotype {
 };
 
 class VCFGenotype {
- private:
+private:
   map_str data{};
   vector<VCFAllele> alleles{};
   opt_str gt{};
   opt_int dp{};
+  bool is_phased;
   VCFPhasedGenotype phased{};
 
- public:
+public:
   VCFGenotype() = delete;
   VCFGenotype(const vec_str &format, const string &query) {
     auto query_values = StringDecompose::str_split(query, ':', true);
@@ -90,12 +91,14 @@ class VCFGenotype {
         temp_gt.has_value() && (*temp_gt)->find('.') == string::npos) {
       this->gt = *temp_gt;
 
+      is_phased = (*temp_gt)->find('/') == string::npos;
+
       const auto vector_gt = StringDecompose::str_split(
-          *(*temp_gt), ((*temp_gt)->find('/') == string::npos ? '|' : '/'),
-          true);
+          *(*temp_gt), (is_phased ? '|' : '/'), true);
       int pos = 0;
 
-      for (const auto &gt : vector_gt) alleles.emplace_back(pos++, gt);
+      for (const auto &gt : vector_gt)
+        alleles.emplace_back(pos++, gt);
     }
 
     if (auto temp_dp = data.get("DP");
@@ -120,13 +123,14 @@ class VCFGenotype {
   auto getGT() const { return gt; }
   bool hasDP() const { return dp.has_value(); }
   auto getDP() const { return dp; }
-  auto isPhased() const { return phased.hasValue(); }
+  auto isPhased() const { return is_phased; }
+  auto hasPhases() const { return phased.hasValue(); }
   auto getPhasedGT() const { return phased.getGT(); }
   auto getPhasedID() const { return phased.getID(); }
 };
 
 class VCFRecord {
- private:
+private:
   string chrom;
   int pos_start = 0;
   int pos_end = 0;
@@ -143,11 +147,12 @@ class VCFRecord {
 
   int header_size = 0;
 
- public:
+public:
   VCFRecord() = delete;
   VCFRecord(const string &line) {
     //    std::cerr << line << "\n";
-    if (line.empty()) throw runerror{"Empty line"};
+    if (line.empty())
+      throw runerror{"Empty line"};
     auto fields = StringDecompose::str_split(line, '\t', true);
     header_size = static_cast<int>(fields.size());
 
@@ -166,7 +171,8 @@ class VCFRecord {
       id = StringDecompose::str_split(temp_id, ',', true);
 
     ref = *iter++;
-    if (ref.empty()) throw runerror{"Empty REF column"};
+    if (ref.empty())
+      throw runerror{"Empty REF column"};
 
     pos_length = static_cast<int>(ref.size());
     pos_end = pos_start + pos_length - 1;
@@ -186,7 +192,8 @@ class VCFRecord {
     if (iter < fields.end()) {
       format = StringDecompose::str_split(*iter++, ':', true);
 
-      for (; iter < fields.end(); ++iter) genotypes.emplace_back(format, *iter);
+      for (; iter < fields.end(); ++iter)
+        genotypes.emplace_back(format, *iter);
     }
   }
 
@@ -204,6 +211,7 @@ class VCFRecord {
       return nullopt;
   }
   auto getAlleles() const { return 1 + static_cast<int>(alt.size()); }
+  auto countIDs() const { return static_cast<int>(id.size()); }
   auto getIDs() const { return id; }
   auto getFilters() const { return filter; }
   auto getInfo() const { return info; }
@@ -211,17 +219,18 @@ class VCFRecord {
 };
 
 class VCFHeader {
- private:
+private:
   vector<string> samples;
   size_t header_size{0};
 
- public:
+public:
   VCFHeader() = default;
   VCFHeader(const string &line) {
     auto fields = StringDecompose::str_split(line, '\t', true);
     header_size = fields.size();
     if (header_size > 9) {
-      if (fields[8] != "FORMAT") throw runerror{"Header is malformed"};
+      if (fields[8] != "FORMAT")
+        throw runerror{"Header is malformed"};
       samples = vec_str(fields.begin() + 9, fields.end());
     } else if (fields.size() < 8 || fields.size() == 9)
       throw runerror{"Wrong number of columns"};
@@ -233,12 +242,12 @@ class VCFHeader {
 };
 
 class VCFComment {
- private:
+private:
   string field;
   string value;
   bool proper{false};
 
- public:
+public:
   VCFComment() = default;
   VCFComment(const string &line) {
     const auto &[field, value] =
@@ -251,7 +260,8 @@ class VCFComment {
     this->proper =
         (StringSearch::str_starts_with(value, "<ID=") && value.back() == '>');
 
-    if (isProper()) this->value = this->value.substr(1, this->value.size() - 2);
+    if (isProper())
+      this->value = this->value.substr(1, this->value.size() - 2);
   }
 
   string getField() const noexcept { return field; }
@@ -270,7 +280,7 @@ class VCFComment {
 using var_vcf = std::variant<VCFRecord, VCFComment, VCFHeader>;
 
 class VCFReader {
- private:
+private:
   Files::FileReader reader;
   int header_size = 0;
 
@@ -296,7 +306,7 @@ class VCFReader {
                      std::to_string(reader.getLineNum())};
   }
 
- public:
+public:
   VCFReader() = delete;
   VCFReader(const string &file_name) : reader{file_name} {}
   VCFReader(std::istream &stream) : reader{stream} {}
@@ -322,7 +332,8 @@ class VCFReader {
   void provideSamples(const vector<string> &samples) {
     samples_picked = {};
 
-    if (samples.empty()) return;
+    if (samples.empty())
+      return;
 
     if (!this->hasSamples())
       throw runerror{"VCF does not contain any samples!"};
@@ -346,4 +357,4 @@ class VCFReader {
   auto getSamplesPicked() const { return samples_picked; }
 };
 
-}  // namespace HKL::VCF
+} // namespace HKL::VCF
