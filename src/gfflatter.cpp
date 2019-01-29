@@ -50,17 +50,17 @@ int main(int argc, char *argv[]) {
 void GFF::Parameters::parse(int argc, char *argv[]) {
   Args::Arguments args{};
 
-  args.addArgument("input", "Input file in GFF format", Args::ValueType::String,
+  args.addArgument("input", "Input file in GFF format", Args::ValueType::Single,
                    'i');
-  args.addArgument("format", "Format of data", Args::ValueType::String, 'f',
+  args.addArgument("format", "Format of data", Args::ValueType::Single, 'f',
                    "tsv");
   args.addArgument("comments", "Print comments", Args::ValueType::Bool, 'c');
   args.addArgument(
       "keys",
       "Get only these keys as columns. Values should be delimetered with ','.",
-      Args::ValueType::String, 'k');
+      Args::ValueType::Single, 'k');
   args.addArgument("empty", "Value to use when columns is empty.",
-                   Args::ValueType::String, 'e', ".");
+                   Args::ValueType::Single, 'e', ".");
 
   args.parse(argc, argv);
 
