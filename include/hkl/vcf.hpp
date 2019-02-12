@@ -32,18 +32,25 @@ using map_str = Printable::PrintableStrMap;
 class VCFAllele {
 private:
   int position;
-  opt_int allele;
-  opt_int depth;
+  opt_int allele{};
+  opt_str seq{};
+  opt_int depth{};
 
 public:
   VCFAllele() = delete;
-  VCFAllele(int position, const string &allele) : position{position} {
-    this->allele = allele == "." ? nullopt : opt_int{std::stoi(allele)};
+  VCFAllele(int position, const string &allele, const vec_str &allele_seq)
+      : position{position} {
+
+    if (allele != ".") {
+      this->allele = std::stoi(allele);
+      this->seq = allele_seq[static_cast<size_t>(*this->allele)];
+    }
   }
 
-  int getPosition() const { return position; }
-  opt_int getAllele() const { return allele; }
-  bool hasAllele() const { return allele.has_value(); }
+  auto getPosition() const { return position; }
+  auto getAllele() const { return allele; }
+  auto getSeq() const { return seq; }
+  auto hasAllele() const { return allele.has_value(); }
 };
 
 class VCFPhasedGenotype {
@@ -74,7 +81,8 @@ private:
 
 public:
   VCFGenotype() = delete;
-  VCFGenotype(const vec_str &format, const string &query) {
+  VCFGenotype(const vec_str &format, const string &query,
+              const vec_str &alleles_seq) {
     auto query_values = StringDecompose::str_split(query, ':', true);
 
     if (format.size() != query_values.size()) {
@@ -98,7 +106,7 @@ public:
       int pos = 0;
 
       for (const auto &gt : vector_gt)
-        alleles.emplace_back(pos++, gt);
+        alleles.emplace_back(pos++, gt, alleles_seq);
     }
 
     if (auto temp_dp = data.get("DP");
@@ -135,9 +143,10 @@ private:
   int pos_start = 0;
   int pos_end = 0;
   int pos_length = 0;
-  vector<string> id;
-  string ref;
-  vector<string> alt;
+  vec_str id;
+  //  string ref;
+  //  vec_str alt;
+  vec_str alleles;
   opt_double qual{};
   optional<vector<string>> filter;
   vector<string> format;
@@ -170,13 +179,14 @@ public:
     if (auto temp_id = *iter++; !temp_id.empty() && temp_id != ".")
       id = StringDecompose::str_split(temp_id, ',', true);
 
-    ref = *iter++;
+    auto ref = *iter++;
     if (ref.empty())
       throw runerror{"Empty REF column"};
 
     pos_length = static_cast<int>(ref.size());
     pos_end = pos_start + pos_length - 1;
-    alt = StringDecompose::str_split(*iter++, ',', true);
+    alleles = StringDecompose::str_split(ref + "," + *iter++, ',', true);
+
     if (auto temp_qual = *iter++; temp_qual == ".")
       qual = nullopt;
     else
@@ -193,7 +203,7 @@ public:
       format = StringDecompose::str_split(*iter++, ':', true);
 
       for (; iter < fields.end(); ++iter)
-        genotypes.emplace_back(format, *iter);
+        genotypes.emplace_back(format, *iter, alleles);
     }
   }
 
@@ -201,8 +211,8 @@ public:
   auto getStart() const { return pos_start; }
   auto getEnd() const { return pos_end; }
   auto getLength() const { return pos_length; }
-  auto getRef() const { return ref; }
-  auto getAlt() const { return alt; }
+  auto getRef() const { return alleles[0]; }
+  auto getAlt() const { return vec_str(alleles.begin() + 1, alleles.end()); }
   auto getQual() const { return qual; }
   optional<int> getPass() const {
     if (auto pass = this->filter)
@@ -210,7 +220,7 @@ public:
     else
       return nullopt;
   }
-  auto getAlleles() const { return 1 + static_cast<int>(alt.size()); }
+  auto getAllelesCount() const { return static_cast<int>(alleles.size()); }
   auto countIDs() const { return static_cast<int>(id.size()); }
   auto getIDs() const { return id; }
   auto getFilters() const { return filter; }
