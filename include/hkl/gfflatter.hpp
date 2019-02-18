@@ -18,6 +18,7 @@ using std::cerr;
 using std::optional;
 using std::string;
 using std::vector;
+using pGFFReader = std::unique_ptr<GFF::GFFReader>;
 
 enum class Formats { TSV = 0, JSON = 1 };
 
@@ -44,9 +45,14 @@ public:
   auto getOutput() const { return output; }
   auto getMissing() const { return missing; }
   auto getEmpty() const { return empty; }
+
+  auto begin() { return input.begin(); }
+  auto end() { return input.end(); }
+  auto cbegin() const { return input.cbegin(); }
+  auto cend() const { return input.cend(); }
 };
 
-void gffile_to_tsv(std::unique_ptr<GFFReader> &reader,
+void gffile_to_tsv(vector<pGFFReader> &readers,
                    std::unique_ptr<std::ostream> &writer, const string &missing,
                    const std::string &empty, bool comments);
 
