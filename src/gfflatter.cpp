@@ -14,19 +14,17 @@ using std::cerr;
 int main(int argc, char *argv[]) {
   GFF::Parameters args{};
 
-  try {
-    args.parse(argc, argv);
-  } catch (const runtime_error &ex) {
-    std::cerr << ex.what() << "\n";
+  if (args.parse(argc, argv))
     return 1;
-  }
 
   std::unique_ptr<GFF::GFFReader> reader{nullptr};
 
-  if (const auto file_name = args.getInput())
-    reader = std::make_unique<GFF::GFFReader>(*file_name);
-  else
+  if (!args.hasInput())
     reader = std::make_unique<GFF::GFFReader>(std::cin);
+  else if (args.size() == 1)
+    reader = std::make_unique<GFF::GFFReader>(args.getInput().front());
+  else
+    return 1;
 
   std::unique_ptr<ostream> writer{nullptr};
 
@@ -47,71 +45,36 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-void GFF::Parameters::parse(int argc, char *argv[]) {
+bool GFF::Parameters::parse(int argc, char *argv[]) {
   Args::Arguments args{};
 
-  args.addArgument("input", "Input file in GFF format", Args::ValueType::Single,
-                   'i');
-  args.addArgument("format", "Format of data", Args::ValueType::Single, 'f',
-                   "tsv");
-  args.addArgument("comments", "Print comments", Args::ValueType::Bool, 'c');
+  args.addMulti("input", "Input file in GFF format", 'i');
+  args.addArgument("input", "Format of output", 'f', "tsv");
+  args.addSwitch("comments", "Print comments", 'c');
   args.addArgument(
       "keys",
       "Get only these keys as columns. Values should be delimetered with ','.",
-      Args::ValueType::Single, 'k');
-  args.addArgument("empty", "Value to use when columns is empty.",
-                   Args::ValueType::Single, 'e', ".");
+      'k');
+  args.addArgument("missing", "Value for .", 'm', "true");
+  args.addArgument("empty", "Value to use when columns is empty.", 'e', ".");
 
-  args.parse(argc, argv);
+  if (args.parse(argc, argv))
+    return 1;
 
-  for (const auto &flag : args) {
-    if (const auto name = flag.getName(); name == "input" || name == "i") {
-      if (flag.isEmpty())
-        throw runtime_error{
-            "Input file not specifed, but --input/-i flag set!"};
-      else
-        input = *flag.getValue();
-    } else if (name == "format" || name == "f") {
-      if (const auto value = flag.getValue()) {
-        if (value == "tsv" || value == "TSV")
-          format = Formats::TSV;
-        else if (value == "json" || value == "JSON")
-          format = Formats::JSON;
-        else
-          throw runtime_error{"Unrecognized format '" + *value + "'"};
-      } else
-        throw runtime_error{
-            "Output format not specified, but --format/-f flag set!"};
-    } else if (name == "comments" || name == "c") {
-      if (flag.hasValue())
-        throw runtime_error{"Values are not permitted with --comments flag"};
-      comments = true;
-    } else if (name == "output" || name == "o") {
-      if (flag.isEmpty())
-        throw runtime_error{
-            "Output file not specifed, but --output/-o flag set!"};
-      else
-        output = *flag.getValue();
-    } else if (name == "keys" || name == "k") {
-      if (flag.isEmpty())
-        throw runtime_error{"Keys not specifed, but --keys/-k flag set!"};
-      else
-        keys = StringDecompose::str_split(*flag.getValue(), '\t', true);
-    } else if (name == "missing" || name == "m") {
-      if (flag.isEmpty())
-        throw runtime_error{
-            "Missing value not specifed, but --missing/-m flag set!"};
-      else
-        missing = *flag.getValue();
-    } else if (name == "empty" || name == "e") {
-      if (flag.isEmpty())
-        throw runtime_error{
-            "Empty value not specifed, but --empty/-e flag set!"};
-      else
-        empty = *flag.getValue();
-    } else
-      throw runtime_error{"Unknown flag '" + name + "'"};
-  }
+  this->input = args.getIterable("input");
+
+  if (const auto format = *args.getValue("format"); format == "tsv")
+    this->format = Formats::TSV;
+  else
+    throw runtime_error{"Unrecognized format '" + format + "'"};
+
+  this->comments = args.isSet("comments");
+  this->output = args.getValue("output");
+  this->keys = args.getIterable("keys", ',');
+  this->empty = *args.getValue("empty");
+  this->missing = *args.getValue("missing");
+
+  return 0;
 }
 
 void GFF::gffile_to_tsv(std::unique_ptr<GFF::GFFReader> &reader,

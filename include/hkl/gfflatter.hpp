@@ -23,7 +23,7 @@ enum class Formats { TSV = 0, JSON = 1 };
 
 class Parameters {
 private:
-  optional<string> input;
+  vector<string> input;
   optional<string> output;
   vector<string> keys;
   Formats format{Formats::TSV};
@@ -33,10 +33,11 @@ private:
 
 public:
   Parameters() = default;
-  void parse(int argc, char *argv[]);
+  bool parse(int argc, char *argv[]);
 
-  bool hasInput() const { return input.has_value(); }
+  bool hasInput() const { return !input.empty(); }
   auto getInput() const { return input; }
+  auto size() const { return input.size(); }
   auto getFormat() const { return format; }
   auto hasComments() const { return comments; }
   bool hasOutput() const { return output.has_value(); }
