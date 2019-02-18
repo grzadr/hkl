@@ -17,19 +17,14 @@ int main(int argc, char *argv[]) {
   if (args.parse(argc, argv))
     return 1;
 
-  vector<GFF::pGFFReader> readers;
-
   std::unique_ptr<GFF::GFFReader> reader{nullptr};
 
   if (!args.hasInput())
-    readers.emplace_back(std::make_unique<GFF::GFFReader>(std::cin));
-  //    reader = std::make_unique<GFF::GFFReader>(std::cin);
-  //  else if (args.size() == 1)
-  //    reader = std::make_unique<GFF::GFFReader>(args.getInput().front());
+    reader = std::make_unique<GFF::GFFReader>(std::cin);
+  else if (args.size() == 1)
+    reader = std::make_unique<GFF::GFFReader>(args.getInput().front());
   else
-    std::transform(
-        args.begin(), args.end(), std::back_inserter(readers),
-        [](const auto &s) { return std::make_unique<GFF::GFFReader>(s); });
+    return 1;
 
   std::unique_ptr<ostream> writer{nullptr};
 
@@ -40,7 +35,7 @@ int main(int argc, char *argv[]) {
 
   switch (args.getFormat()) {
   case GFF::Formats::TSV:
-    GFF::gffile_to_tsv(readers, writer, args.getMissing(), args.getEmpty(),
+    GFF::gffile_to_tsv(reader, writer, args.getMissing(), args.getEmpty(),
                        args.hasComments());
     break;
   default:
@@ -82,7 +77,7 @@ bool GFF::Parameters::parse(int argc, char *argv[]) {
   return 0;
 }
 
-void GFF::gffile_to_tsv(vector<pGFFReader> &readers,
+void GFF::gffile_to_tsv(std::unique_ptr<GFF::GFFReader> &reader,
                         std::unique_ptr<std::ostream> &writer,
                         const string &missing, const string &empty,
                         bool comments) {
@@ -91,18 +86,16 @@ void GFF::gffile_to_tsv(vector<pGFFReader> &readers,
   vector<GFF::GFFRecord> records;
   int counter = 0;
 
-  for (auto &reader : readers) {
-    while (const auto line = reader->getItem()) {
-      if (++counter % 1000000 == 0)
-        std::clog << counter << "\n";
-      if ((*line).index() == 1) {
-        auto record = std::get<GFF::GFFRecord>(*line);
-        std::copy(record.keys_begin(), record.keys_end(),
-                  std::inserter(keys_to_print, keys_to_print.begin()));
-        records.push_back(record);
-      } else if (comments)
-        std::visit([&writer](auto &&ele) { *writer << ele << "\n"; }, *line);
-    }
+  while (const auto line = reader->getItem()) {
+    if (++counter % 1000000 == 0)
+      std::clog << counter << "\n";
+    if ((*line).index() == 1) {
+      auto record = std::get<GFF::GFFRecord>(*line);
+      std::copy(record.keys_begin(), record.keys_end(),
+                std::inserter(keys_to_print, keys_to_print.begin()));
+      records.push_back(record);
+    } else if (comments)
+      std::visit([&writer](auto &&ele) { *writer << ele << "\n"; }, *line);
   }
 
   *writer << header << "\t"
