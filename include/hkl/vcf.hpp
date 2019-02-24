@@ -75,6 +75,7 @@ private:
   map_str data{};
   vector<VCFAllele> alleles{};
   opt_str gt{};
+  opt_str gt_decoded{};
   opt_int dp{};
   bool is_phased;
   VCFPhasedGenotype phased{};
@@ -105,8 +106,17 @@ public:
           *(*temp_gt), (is_phased ? '|' : '/'), true);
       int pos = 0;
 
-      for (const auto &gt : vector_gt)
+      for (const auto &gt : vector_gt) {
         alleles.emplace_back(pos++, gt, alleles_seq);
+        const auto &last = alleles.back();
+        if (last.hasAllele()) {
+          if (this->gt_decoded.has_value())
+            gt_decoded =
+                *gt_decoded + (this->is_phased ? "|" : "/") + *last.getSeq();
+          else
+            gt_decoded = *last.getSeq();
+        }
+      }
     }
 
     if (auto temp_dp = data.get("DP");
@@ -129,6 +139,8 @@ public:
   auto get(const string &key) const { return data.get(key); }
   bool hasGT() const { return gt.has_value(); }
   auto getGT() const { return gt; }
+  bool hasGTDecoded() const { return gt_decoded.has_value(); }
+  auto getGTDecoded() const { return gt_decoded; }
   bool hasDP() const { return dp.has_value(); }
   auto getDP() const { return dp; }
   auto isPhased() const { return is_phased; }
