@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <iterator>
 #include <numeric>
 #include <optional>
 #include <stdexcept>
@@ -347,33 +348,40 @@ public:
 
   auto getHeaderSize() const { return header_size; }
 
-  void provideSamples(const string &samples) {
-    provideSamples(StringDecompose::str_split(samples, ',', true));
+  void provideSamples(const string &samples, char sep = ',') {
+    provideSamples(StringDecompose::str_split(samples, sep, true));
   }
 
   void provideSamples(const vector<string> &samples) {
+    provideSamples(samples.begin(), samples.end());
+  }
+
+  template <class It> void provideSamples(const It &begin, const It &end) {
     samples_picked = {};
 
-    if (samples.empty())
+    if (begin == end)
       return;
+
+    std::cerr << StringCompose::str_join(samples_reference, "-") << "\n"
+              << this->hasSamples() << "\n";
 
     if (!this->hasSamples())
       throw runerror{"VCF does not contain any samples!"};
 
-    samples_picked.reserve(samples.size());
+    samples_picked.reserve(static_cast<size_t>(std::distance(begin, end)));
     auto samples_end = samples_reference.end();
     auto samples_begin = samples_reference.begin();
 
-    for (const auto &ele : samples) {
-      auto result = std::find(samples_begin, samples_end, ele);
+    for (auto it = begin; it < end; ++it) {
+      auto result = std::find(samples_begin, samples_end, *it);
       if (result == samples_end)
-        throw runerror{"Sample " + ele + "not found in header"};
+        throw runerror{"Sample " + *it + "not found in header"};
       else
         samples_picked.emplace_back(std::distance(samples_begin, result));
     }
   }
 
-  bool hasSamples() const { return samples_picked.size(); }
+  bool hasSamples() const { return samples_reference.size(); }
 
   auto getSamplesReference() const { return samples_reference; }
   auto getSamplesPicked() const { return samples_picked; }
