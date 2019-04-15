@@ -1,3 +1,4 @@
 [submodule "agizmo"]
-	path = agizmo
-	url = ../agizmo.git
+  path = agizmo
+  url = ../agizmo.git
+  branch = .
