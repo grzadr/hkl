@@ -362,11 +362,10 @@ public:
     if (begin == end)
       return;
 
-    std::cerr << StringCompose::str_join(samples_reference, "-") << "\n"
-              << this->hasSamples() << "\n";
-
-    if (!this->hasSamples())
-      throw runerror{"VCF does not contain any samples!"};
+    if (!this->hasSamples()) {
+      std::cerr << "Warning - VCF does not contain any samples!\n";
+      return;
+    }
 
     samples_picked.reserve(static_cast<size_t>(std::distance(begin, end)));
     auto samples_end = samples_reference.end();
@@ -374,10 +373,10 @@ public:
 
     for (auto it = begin; it < end; ++it) {
       auto result = std::find(samples_begin, samples_end, *it);
-      if (result == samples_end)
-        throw runerror{"Sample " + *it + "not found in header"};
-      else
+      if (result != samples_end)
         samples_picked.emplace_back(std::distance(samples_begin, result));
+      else
+        std::cerr << "Warning - Sample " + *it + "not found in header";
     }
   }
 
