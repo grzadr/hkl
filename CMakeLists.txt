@@ -32,7 +32,7 @@ target_include_directories(GFFlatter
 )
 
 target_compile_options(GFFlatter PRIVATE
-  -march=x86-64 -mtune=native -O3 -g0
+  -march=generic -mtune=generic -O3 -g0
   -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
   -fvisibility=hidden -Werror -Wall -pthread)
 target_compile_features(GFFlatter PRIVATE cxx_std_17)
@@ -76,7 +76,7 @@ target_include_directories(pyHKL
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/agizmo/include
 )
-target_compile_options(pyHKL PRIVATE -march=x86-64 -mtune=native -O3 -g0
+target_compile_options(pyHKL PRIVATE -march=generic -mtune=generic -O3 -g0
                        -pipe -fPIE -fPIC -fstack-protector-strong -fno-plt
                        -fvisibility=hidden -Werror -Wall -pthread)
 target_compile_features(pyHKL PRIVATE cxx_std_17)
