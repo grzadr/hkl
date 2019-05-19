@@ -2,3 +2,4 @@
 /build/
 /build-qtc/
 /qtc-build/
+.*.sw?

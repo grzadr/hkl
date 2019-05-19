@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 }
 
 bool GFF::Parameters::parse(int argc, char *argv[]) {
-  Args::Arguments args{};
+  Args::Arguments args{"GFFlatter"};
 
   args.addMulti("input", "Input file in GFF format", 'i');
   args.addArgument("input", "Format of output", 'f', "tsv");
