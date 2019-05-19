@@ -55,6 +55,7 @@ bool GFF::Parameters::parse(int argc, char *argv[]) {
       "keys",
       "Get only these keys as columns. Values should be delimetered with ','.",
       'k');
+  args.enableAppend("keys")
   args.addArgument("missing", "Value for .", 'm', "true");
   args.addArgument("empty", "Value to use when columns is empty.", 'e', ".");
 
@@ -70,7 +71,7 @@ bool GFF::Parameters::parse(int argc, char *argv[]) {
 
   this->comments = args.isSet("comments");
   this->output = args.getValue("output");
-  this->keys = args.getIterable("keys", ',');
+  this->keys = args.getIterable("keys");
   this->empty = *args.getValue("empty");
   this->missing = *args.getValue("missing");
 
