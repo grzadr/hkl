@@ -2,3 +2,4 @@
   path = agizmo
   url = ../agizmo.git
   branch = master
+  update = rebase
